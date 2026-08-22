@@ -7,6 +7,17 @@ let voicePlaybackInterval = null;
 let activeOverride = 'normal';
 let scorecardChart = null;
 
+// XSS Prevention: HTML Sanitization Helper
+function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // Page initialization
 document.addEventListener('DOMContentLoaded', () => {
     initCanvasBackground();
@@ -304,13 +315,13 @@ function fetchPipelines() {
 
                 tr.innerHTML = `
                     <td>
-                        <strong style="display:block;">${item.customer_name}</strong>
-                        <span style="font-size:10px; color:var(--text-dim);">${item.id}</span>
+                        <strong style="display:block;">${escapeHTML(item.customer_name)}</strong>
+                        <span style="font-size:10px; color:var(--text-dim);">${escapeHTML(item.id)}</span>
                     </td>
                     <td>₹${item.amount.toLocaleString('en-IN')}</td>
-                    <td><span class="tag-reason">${item.diagnose}</span></td>
+                    <td><span class="tag-reason">${escapeHTML(item.diagnose)}</span></td>
                     <td>${item.contact_count}/3</td>
-                    <td><span class="gateway-status-tag ${stageClass}">${item.stage}</span></td>
+                    <td><span class="gateway-status-tag ${stageClass}">${escapeHTML(item.stage)}</span></td>
                     <td style="text-align:center;">${policyCol}</td>
                 `;
                 tbody.appendChild(tr);
@@ -366,8 +377,8 @@ function loadAuditTrail(id) {
             // 3. Agent Decision (LLM)
             const strategy = entity.recovery_campaign_status || 'DIAGNOSING';
             createAccordionItem(root, 'Agent Decision (LLM)', `
-                <p style="margin-bottom:6px;"><strong>Identified Strategy:</strong> ${strategy}</p>
-                <div class="json-view-block">Prompt: Run failure diagnosis for ${entity.id}.
+                <p style="margin-bottom:6px;"><strong>Identified Strategy:</strong> ${escapeHTML(strategy)}</p>
+                <div class="json-view-block">Prompt: Run failure diagnosis for ${escapeHTML(entity.id)}.
 Outcome: Trigger collection campaign.</div>
             `);
             
@@ -410,13 +421,13 @@ Outcome: Trigger collection campaign.</div>
                                     <span class="audio-timer" id="voice-timer">00:00</span>
                                 </div>
                                 <div class="voice-emotion-indicator">
-                                    <span class="emotion-label">Tone: ${emotionName}</span>
-                                    <div class="emotion-color-bar ${emotionClass}"></div>
+                                    <span class="emotion-label">Tone: ${escapeHTML(emotionName)}</span>
+                                    <div class="emotion-color-bar ${escapeHTML(emotionClass)}"></div>
                                 </div>
                                 <div class="key-phrase-tags-row">
                                     ${phraseTags}
                                 </div>
-                                <div class="voice-transcript" id="voice-transcript-text">${cleanScript}</div>
+                                <div class="voice-transcript" id="voice-transcript-text">${escapeHTML(cleanScript)}</div>
                             </div>
                         `;
                     } else {
@@ -424,10 +435,10 @@ Outcome: Trigger collection campaign.</div>
                         actionsContent += `
                             <div class="comm-item" style="border:1px solid var(--card-border); padding:8px; border-radius:6px; background:rgba(0,0,0,0.15);">
                                 <div style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between; margin-bottom:4px;">
-                                    <span><i class="fa-solid ${dirIcon}"></i> ${titleText} (${c.channel})</span>
-                                    <span>${new Date(c.timestamp).toLocaleTimeString()}</span>
+                                    <span><i class="fa-solid ${dirIcon}"></i> ${escapeHTML(titleText)} (${escapeHTML(c.channel)})</span>
+                                    <span>${escapeHTML(new Date(c.timestamp).toLocaleTimeString())}</span>
                                 </div>
-                                <div class="comm-body" style="font-size:11px; white-space:pre-line;">${c.content}</div>
+                                <div class="comm-body" style="font-size:11px; white-space:pre-line;">${escapeHTML(c.content)}</div>
                             </div>
                         `;
                     }
@@ -447,8 +458,8 @@ Outcome: Trigger collection campaign.</div>
                             Buyer raised a claim. Campaign paused automatically to prevent harassment.
                         </div>
                         <div class="hitl-actions">
-                            <button class="btn-hitl" id="hitl-btn-resolve" onclick="resolveHitlAction('${entity.id}', 'REFUND_RESOLVE')">Refund & Close</button>
-                            <button class="btn-hitl" id="hitl-btn-extend" onclick="resolveHitlAction('${entity.id}', 'EXTEND_DEFER')">Extend 7 Days</button>
+                            <button class="btn-hitl" id="hitl-btn-resolve" onclick="resolveHitlAction('${escapeHTML(entity.id)}', 'REFUND_RESOLVE')">Refund & Close</button>
+                            <button class="btn-hitl" id="hitl-btn-extend" onclick="resolveHitlAction('${escapeHTML(entity.id)}', 'RESCHEDULE_PROMISE')">Extend 7 Days</button>
                         </div>
                     </div>
                 `);
@@ -465,9 +476,9 @@ Outcome: Trigger collection campaign.</div>
             logs.forEach(l => {
                 logsHtml += `
                     <li style="border-bottom:1px solid rgba(255,255,255,0.03); padding-bottom:6px;">
-                        <div style="font-size:10px; color:var(--text-dim);">${new Date(l.timestamp).toLocaleTimeString()} - <strong>${l.stage}</strong></div>
-                        <div style="font-weight:600; color:var(--text-muted); font-size:11px;">${l.action_taken}</div>
-                        <div style="font-size:11px; color:var(--text-dim); margin-top:2px;">${l.reasoning}</div>
+                        <div style="font-size:10px; color:var(--text-dim);">${escapeHTML(new Date(l.timestamp).toLocaleTimeString())} - <strong>${escapeHTML(l.stage)}</strong></div>
+                        <div style="font-weight:600; color:var(--text-muted); font-size:11px;">${escapeHTML(l.action_taken)}</div>
+                        <div style="font-size:11px; color:var(--text-dim); margin-top:2px;">${escapeHTML(l.reasoning)}</div>
                     </li>
                 `;
             });

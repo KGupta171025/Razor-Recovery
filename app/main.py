@@ -1,10 +1,11 @@
 import os
-from fastapi import FastAPI, Depends, HTTPException, Body
+from fastapi import FastAPI, Depends, HTTPException, Body, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from pydantic import BaseModel
 
 from app.database import get_db, init_db
 from app.models import Invoice, Payment, AuditLog, Communication
@@ -12,14 +13,51 @@ import app.simulator as simulator
 
 app = FastAPI(title="RazorRecovery AI - Developer Portal")
 
-# CORS middleware for local testing
+# Secure CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://127.0.0.1:8000", "http://localhost:8000"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+# Secure Response Headers Middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; "
+        "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
+        "img-src 'self' data:; "
+        "connect-src 'self';"
+    )
+    return response
+
+# Pydantic Schemas for Request Validation
+class GatewayToggleRequest(BaseModel):
+    bank: str
+
+class OverrideRequest(BaseModel):
+    override: str
+
+class DisputeActionRequest(BaseModel):
+    entity_id: str
+    action: str
+
+class StepRequest(BaseModel):
+    entity_type: str
+    entity_id: str
+
+class PaymentMockRequest(BaseModel):
+    entity_type: str
+    entity_id: str
 
 # Initialize Database on Startup
 @app.on_event("startup")
@@ -38,8 +76,8 @@ def seed_db(db: Session = Depends(get_db)):
 
 # API: Execute Simulation Step
 @app.post("/api/step")
-def step_recovery(entity_type: str = Body(...), entity_id: str = Body(...), db: Session = Depends(get_db)):
-    res = simulator.run_step_recovery(db, entity_type, entity_id)
+def step_recovery(req: StepRequest, db: Session = Depends(get_db)):
+    res = simulator.run_step_recovery(db, req.entity_type, req.entity_id)
     return res
 
 # API: Run Full Batch (55 records)
@@ -181,8 +219,8 @@ def get_audit_trail(entity_id: str, db: Session = Depends(get_db)):
 
 # API: Manual / Checkout Mock Payment Success
 @app.post("/api/pay-mock")
-def pay_mock(entity_id: str = Body(embed=True), db: Session = Depends(get_db)):
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+def pay_mock(req: PaymentMockRequest, db: Session = Depends(get_db)):
+    entity_id = req.entity_id
     if "pay_" in entity_id:
         payment = db.query(Payment).filter(Payment.id == entity_id).first()
         if not payment:
@@ -226,8 +264,9 @@ def get_gateway_health():
 
 # API: Toggle Gateway Health
 @app.post("/api/gateway-health/toggle")
-def toggle_gateway_health(bank: str = Body(embed=True)):
+def toggle_gateway_health(req: GatewayToggleRequest):
     from app.gateway import GATEWAY_HEALTH
+    bank = req.bank
     if bank not in GATEWAY_HEALTH:
         raise HTTPException(status_code=400, detail="Invalid bank gateway")
     
@@ -237,8 +276,9 @@ def toggle_gateway_health(bank: str = Body(embed=True)):
 
 # API: Set Simulation Override
 @app.post("/api/simulation/override")
-def set_simulation_override(override: str = Body(embed=True)):
+def set_simulation_override(req: OverrideRequest):
     import app.gateway as gateway
+    override = req.override
     if override not in ["normal", "induce_gateway_failure", "customer_opt_out", "dispute_trigger"]:
         raise HTTPException(status_code=400, detail="Invalid override state")
     gateway.SIMULATION_OVERRIDE = override
@@ -255,7 +295,9 @@ def set_simulation_override(override: str = Body(embed=True)):
 
 # API: Human-in-the-Loop Dispute/Promise Actions
 @app.post("/api/dispute-action")
-def dispute_action(entity_id: str = Body(...), action: str = Body(...), db: Session = Depends(get_db)):
+def dispute_action(req: DisputeActionRequest, db: Session = Depends(get_db)):
+    entity_id = req.entity_id
+    action = req.action
     invoice = db.query(Invoice).filter(Invoice.id == entity_id).first()
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")

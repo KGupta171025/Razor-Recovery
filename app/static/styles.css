@@ -1255,3 +1255,42 @@ input:checked + .switch-slider:before {
 
 .toast.success { border-left-color: var(--success); }
 .toast.error { border-left-color: var(--danger); }
+
+/* Sidebar Security Policy Badge styling */
+.sidebar-security-badge {
+    background: rgba(16, 185, 129, 0.04);
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.security-icon {
+    font-size: 16px;
+    color: var(--success);
+    filter: drop-shadow(0 0 4px var(--success-glow));
+}
+
+.security-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.security-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.security-grade {
+    font-size: 9px;
+    color: var(--text-dim);
+}
+
+.security-grade strong {
+    color: var(--success);
+}

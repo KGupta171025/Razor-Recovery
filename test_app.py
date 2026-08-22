@@ -185,5 +185,31 @@ class TestRazorRecovery(unittest.TestCase):
         # Restore override to normal
         gateway.SIMULATION_OVERRIDE = "normal"
 
+    def test_06_secure_api_validations(self):
+        """Test API Pydantic validations and HTTP security headers."""
+        from fastapi.testclient import TestClient
+        from app.main import app
+        
+        # TestClient uses standard HTTP requests
+        # We need to bypass CORS restrictions for the local TestClient context
+        client = TestClient(app)
+        
+        # 1. Test Security Headers
+        response = client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["X-Frame-Options"], "DENY")
+        self.assertEqual(response.headers["X-Content-Type-Options"], "nosniff")
+        self.assertEqual(response.headers["X-XSS-Protection"], "1; mode=block")
+        self.assertIn("default-src 'self'", response.headers["Content-Security-Policy"])
+        
+        # 2. Test Input Validation Failures (Missing Field)
+        # Expected: 422 Unprocessable Entity
+        bad_response = client.post("/api/gateway-health/toggle", json={"invalid_key": "HDFC"})
+        self.assertEqual(bad_response.status_code, 422)
+        
+        # 3. Test Input Validation Success
+        good_response = client.post("/api/gateway-health/toggle", json={"bank": "HDFC"})
+        self.assertEqual(good_response.status_code, 200)
+
 if __name__ == "__main__":
     unittest.main()
