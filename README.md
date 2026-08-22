@@ -15,6 +15,7 @@ Razorpay's evaluation rubric prioritizes: **Problem Taste, Build Quality, AI Jud
 | **AI Judgment** | Strictly hybrid. We use LLMs (Gemini API) for what they are best at—diagnosing complex failure logs, drafting personalized, empathetic emails, and parsing human responses (e.g. promise-to-pay). We use deterministic, bounded code for gates, quiet hours, and retry state transitions. |
 | **Failure Recovery** | Integrates defensive rules: smart retry gates (to avoid spamming bank switches), timeout recovery routing, and a clear reporting of unresolved exceptions that are pushed to human operators. |
 | **The Bar (Track 3)** | Enforces **stopping rules** (maximum 3 contacts, immediate opt-out compliance), **compliant escalation** (escalates tone across sequences), **measured batch recovery** (plots ROI across 55-record simulation runs), and a persistent **audit trail**. |
+| **Enterprise Security** | Production-grade protection: strict Pydantic payload models prevent SQL injections/malformed payloads, Content-Security-Policy (CSP) blocks cross-site injections, X-Frame-Options Denies clickjacking, and XSS sanitization (`escapeHTML`) protects the dashboard. |
 
 ---
 
