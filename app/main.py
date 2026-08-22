@@ -7,11 +7,22 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel
 
+from contextlib import asynccontextmanager
+
 from app.database import get_db, init_db
 from app.models import Invoice, Payment, AuditLog, Communication
 import app.simulator as simulator
 
-app = FastAPI(title="RazorRecovery AI - Developer Portal")
+# Modern Lifespan Handler for Startup/Shutdown Events
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    db = next(get_db())
+    if db.query(Invoice).count() == 0 and db.query(Payment).count() == 0:
+        simulator.seed_synthetic_data(db)
+    yield
+
+app = FastAPI(title="RazorRecovery AI - Developer Portal", lifespan=lifespan)
 
 # Secure CORS configuration
 app.add_middleware(
@@ -58,15 +69,6 @@ class StepRequest(BaseModel):
 class PaymentMockRequest(BaseModel):
     entity_type: str
     entity_id: str
-
-# Initialize Database on Startup
-@app.on_event("startup")
-def startup_event():
-    init_db()
-    db = next(get_db())
-    # Auto-seed if database is empty
-    if db.query(Invoice).count() == 0 and db.query(Payment).count() == 0:
-        simulator.seed_synthetic_data(db)
 
 # API: Seed/Reset Database
 @app.post("/api/seed")
