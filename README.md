@@ -55,6 +55,31 @@ graph TD
 
 ---
 
+## 📊 Unified Command Center (v3 Upgrades)
+
+RazorRecovery AI has been upgraded to **v3 (Unified Command Center)**, featuring a premium dashboard for monitoring, controls, and compliance tracing:
+
+1. **AI Gateway Routing Map (NOC Wires)**:
+   - Visualizes live connections between payment gateways (`HDFC`, `ICICI`, `SBI`, `UPI`) and their health status labels (`Stable`, `Degraded`, `Slow/Jitter`, etc.).
+   - Connection wires are computed dynamically via SVG cubic Bezier paths, glowing and shifting color in real-time depending on the API's status.
+2. **Performance Overrides Selector**:
+   - Features a drop-down menu in the simulation control box allowing you to instantly inject anomalies into the state machine:
+     - *Normal*: Standard random simulation.
+     - *Induce Gateway Failure*: Degrades all banks, forcing the agent to pause retries (`GATED`).
+     - *Customer Opt-Out*: Forces customers to reply with opt-out keywords (`STOP`/`unsubscribe`), proving strict adherence to spam regulations.
+     - *Dispute Trigger*: Force-triggers payment disputes, testing the human-in-the-loop manual action gates.
+3. **Collapsible AI Reasoning Accordion**:
+   - Traces the entire agent decision tree for any selected transaction:
+     - `Data Input` (raw metadata JSON).
+     - `Policy Check` (contact count and boundary compliance validation).
+     - `LLM Decision` (AI diagnosis reasoning).
+     - `Action Taken` (voice transcripts, email copies, and an interactive **audio player** with waveform pulse animations colored by emotion).
+     - `Response` (final audit log outcomes).
+4. **Impact & Compliance Scorecard**:
+   - Reports the real-time Policy Adherence rate (maintains 100% compliance) and plots cumulative revenue recovery graphs over a 4-day timeline.
+
+---
+
 ## 🚀 Quick Start (Under 1 Minute)
 
 This project uses **`uv`**, the ultra-fast Python package manager.
