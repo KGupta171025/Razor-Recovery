@@ -303,6 +303,45 @@ def run_step_recovery(db: Session, entity_type: str, entity_id: str) -> dict:
                 details=comm_data["body"]
             ))
             
+            from app.gateway import SIMULATION_OVERRIDE
+            
+            # Check for simulated client response overrides
+            reply_text = None
+            if SIMULATION_OVERRIDE == "customer_opt_out":
+                reply_text = "STOP"
+            elif SIMULATION_OVERRIDE == "dispute_trigger":
+                reply_text = "I dispute this charge"
+                
+            if reply_text:
+                db.add(Communication(
+                    entity_id=payment.id,
+                    entity_type="payment",
+                    channel="email",
+                    direction="inbound",
+                    content=reply_text
+                ))
+                payment.status = "failed"
+                if SIMULATION_OVERRIDE == "customer_opt_out":
+                    db.add(AuditLog(
+                        entity_type="payment",
+                        entity_id=payment.id,
+                        stage="STOPPED",
+                        action_taken="Campaign Halted (Opt-Out)",
+                        reasoning="Stopping Rule: Customer explicitly opted out of payment alerts.",
+                        details="Opt-Out request processed via override."
+                    ))
+                else:
+                    db.add(AuditLog(
+                        entity_type="payment",
+                        entity_id=payment.id,
+                        stage="STOPPED",
+                        action_taken="Campaign Paused (Disputed)",
+                        reasoning="Stopping Rule: Customer disputed payment charge. Escalated to manual support.",
+                        details="Dispute flagged via override."
+                    ))
+                db.commit()
+                return {"status": "stopped", "message": "Campaign cancelled via override."}
+
             # Simulate a 40% probability customer opens email and pays immediately
             user_pay = random.random() < 0.40
             if user_pay:
@@ -389,10 +428,25 @@ def run_step_recovery(db: Session, entity_type: str, entity_id: str) -> dict:
         ))
         db.commit()
         
-        # Simulate Customer action:
-        # 30% pay immediately, 35% reply with promise/dispute/optout, 35% ignore.
-        outcome = random.random()
-        if outcome < 0.30:
+        from app.gateway import SIMULATION_OVERRIDE
+        
+        # Determine customer response simulation based on override config
+        reply_text = None
+        if SIMULATION_OVERRIDE == "customer_opt_out":
+            reply_text = "Please unsubscribe me. I don't want these emails anymore."
+        elif SIMULATION_OVERRIDE == "dispute_trigger":
+            reply_text = "The transaction failed but I was charged. This is wrong."
+            
+        if reply_text:
+            # Force reply override flow
+            db.add(Communication(
+                entity_id=invoice.id,
+                entity_type="invoice",
+                channel="email",
+                direction="inbound",
+                content=reply_text
+            ))
+        elif random.random() < 0.30: # 30% pay immediately
             invoice.status = "RECOVERED"
             invoice.recovery_campaign_status = "COMPLETED"
             db.add(AuditLog(
@@ -406,17 +460,22 @@ def run_step_recovery(db: Session, entity_type: str, entity_id: str) -> dict:
             db.commit()
             return {"status": "recovered", "amount": invoice.amount}
             
-        elif outcome < 0.65:
-            # Simulate a reply from the customer
-            reply_text = random.choice(MOCK_REPLIES)
-            db.add(Communication(
-                entity_id=invoice.id,
-                entity_type="invoice",
-                channel="email",
-                direction="inbound",
-                content=reply_text
-            ))
-            
+        else:
+            # Simulate a standard reply or ignore
+            reply_text = random.choice(MOCK_REPLIES) if random.random() < 0.50 else None
+            if reply_text:
+                db.add(Communication(
+                    entity_id=invoice.id,
+                    entity_type="invoice",
+                    channel="email",
+                    direction="inbound",
+                    content=reply_text
+                ))
+            else:
+                db.commit()
+                return {"status": "ignored"}
+
+        if reply_text:
             # AI Parsers response
             parse_res = parse_customer_reply(reply_text, {"id": invoice.id, "amount": invoice.amount, "due_at": invoice.due_at})
             intent = parse_res["intent"]

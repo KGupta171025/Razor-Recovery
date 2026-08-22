@@ -79,13 +79,15 @@ def get_metrics(db: Session = Depends(get_db)):
     # Disputed cases
     disputed_cases = db.query(Invoice).filter(Invoice.status == "FAILED", Invoice.recovery_campaign_status == "PAUSED").count()
 
+    import app.gateway as gateway
     return {
         "total_at_risk": round(total_at_risk, 2),
         "total_recovered": round(total_recovered, 2),
         "recovery_rate": round(success_rate, 2),
         "active_cases": active_cases,
         "stopped_cases": stopped_cases,
-        "disputed_cases": disputed_cases
+        "disputed_cases": disputed_cases,
+        "simulation_override": gateway.SIMULATION_OVERRIDE
     }
 
 # API: Fetch Pipelines
@@ -232,6 +234,24 @@ def toggle_gateway_health(bank: str = Body(embed=True)):
     current = GATEWAY_HEALTH[bank]
     GATEWAY_HEALTH[bank] = "degraded" if current == "stable" else "stable"
     return {"status": "success", "bank": bank, "health": GATEWAY_HEALTH[bank]}
+
+# API: Set Simulation Override
+@app.post("/api/simulation/override")
+def set_simulation_override(override: str = Body(embed=True)):
+    import app.gateway as gateway
+    if override not in ["normal", "induce_gateway_failure", "customer_opt_out", "dispute_trigger"]:
+        raise HTTPException(status_code=400, detail="Invalid override state")
+    gateway.SIMULATION_OVERRIDE = override
+    
+    # Apply override effects immediately
+    if override == "induce_gateway_failure":
+        for b in gateway.GATEWAY_HEALTH:
+            gateway.GATEWAY_HEALTH[b] = "degraded"
+    elif override == "normal":
+        for b in gateway.GATEWAY_HEALTH:
+            gateway.GATEWAY_HEALTH[b] = "stable"
+            
+    return {"status": "success", "override": override, "gateway_health": gateway.GATEWAY_HEALTH}
 
 # API: Human-in-the-Loop Dispute/Promise Actions
 @app.post("/api/dispute-action")

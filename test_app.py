@@ -148,5 +148,42 @@ class TestRazorRecovery(unittest.TestCase):
         # Restore SBI
         GATEWAY_HEALTH["SBI"] = "stable"
 
+    def test_05_simulation_overrides(self):
+        """Test that customer opt-out and dispute overrides trigger policy rules."""
+        import app.gateway as gateway
+        
+        # Reset and seed fresh
+        simulator.seed_synthetic_data(self.db)
+        
+        # Find any B2C checkouts/invoice
+        invoice = self.db.query(Invoice).first()
+        self.assertIsNotNone(invoice)
+        
+        # Force override state to customer_opt_out
+        gateway.SIMULATION_OVERRIDE = "customer_opt_out"
+        
+        # Advance state to triggering communication outreach (Chasing state)
+        invoice.status = "OVERDUE"
+        invoice.contact_count = 0
+        self.db.commit()
+        
+        # Run step recovery
+        res = simulator.run_step_recovery(self.db, "invoice", invoice.id)
+        
+        # Verify it handled opt-out, set campaign status to STOPPED_OPT_OUT
+        updated_invoice = self.db.query(Invoice).filter(Invoice.id == invoice.id).first()
+        self.assertEqual(updated_invoice.recovery_campaign_status, "STOPPED_OPT_OUT")
+        
+        # Verify corresponding audit log
+        latest_audit = self.db.query(AuditLog).filter(
+            AuditLog.entity_type == "invoice",
+            AuditLog.entity_id == invoice.id
+        ).order_by(AuditLog.timestamp.desc()).first()
+        self.assertEqual(latest_audit.stage, "STOPPED")
+        self.assertEqual(latest_audit.action_taken, "Campaign Cancelled (Opt-Out)")
+        
+        # Restore override to normal
+        gateway.SIMULATION_OVERRIDE = "normal"
+
 if __name__ == "__main__":
     unittest.main()

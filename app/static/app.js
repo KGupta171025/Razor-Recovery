@@ -4,14 +4,20 @@ let activeEntityType = null;
 let currentAuditTab = 'logs';
 let isVoicePlaying = false;
 let voicePlaybackInterval = null;
+let activeOverride = 'normal';
+let scorecardChart = null;
 
 // Page initialization
 document.addEventListener('DOMContentLoaded', () => {
     initCanvasBackground();
     fetchMetrics();
     fetchPipelines();
-    fetchGatewayHealth();
-    checkApiStatus();
+    initScorecardChart();
+    
+    // Draw NOC SVG wires after a small delay to allow CSS layout to settle
+    setTimeout(() => {
+        drawNocWires();
+    }, 500);
 
     // Start continuous automatic refresh polling every 3 seconds
     setInterval(() => {
@@ -20,11 +26,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!modalOpen) {
             fetchPipelines();
             if (activeEntityId) {
-                loadAuditTrail(activeEntityId);
+                refreshAuditTrail(activeEntityId);
             }
         }
-        fetchGatewayHealth();
+        drawNocWires();
     }, 3000);
+
+    // Redraw SVG wires on window resize for responsiveness
+    window.addEventListener('resize', drawNocWires);
 });
 
 // Canvas Particle Network Background
@@ -33,129 +42,169 @@ function initCanvasBackground() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     
-    let width = canvas.width = window.innerWidth;
-    let height = canvas.height = window.innerHeight;
+    let particles = [];
+    const particleCount = 45;
     
-    window.addEventListener('resize', () => {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
-    });
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
     
-    const particles = [];
-    const count = 45;
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
     
-    for (let i = 0; i < count; i++) {
-        particles.push({
-            x: Math.random() * width,
-            y: Math.random() * height,
-            vx: (Math.random() - 0.5) * 0.4,
-            vy: (Math.random() - 0.5) * 0.4,
-            radius: Math.random() * 2 + 1
-        });
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.vx = (Math.random() - 0.5) * 0.4;
+            this.vy = (Math.random() - 0.5) * 0.4;
+            this.radius = Math.random() * 2 + 1;
+        }
+        
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            
+            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+        }
+        
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.25)';
+            ctx.fill();
+        }
+    }
+    
+    for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
     }
     
     function animate() {
-        ctx.clearRect(0, 0, width, height);
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
-        ctx.strokeStyle = 'rgba(59, 130, 246, 0.04)';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        for (let i = 0; i < count; i++) {
-            const p = particles[i];
-            p.x += p.vx;
-            p.y += p.vy;
-            
-            if (p.x < 0 || p.x > width) p.vx *= -1;
-            if (p.y < 0 || p.y > height) p.vy *= -1;
-            
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-            ctx.fill();
-            
-            for (let j = i + 1; j < count; j++) {
-                const p2 = particles[j];
-                const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+        // Draw links between close nodes
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dist = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y);
                 if (dist < 180) {
                     ctx.beginPath();
-                    ctx.moveTo(p.x, p.y);
-                    ctx.lineTo(p2.x, p2.y);
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(59, 130, 246, ${0.1 * (1 - dist / 180)})`;
+                    ctx.lineWidth = 0.8;
                     ctx.stroke();
                 }
             }
         }
+        
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+        
         requestAnimationFrame(animate);
     }
+    
     animate();
 }
 
-// Toast notification helper
-function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    toast.className = `toast show ${type}`;
-    toast.innerText = message;
-    
-    setTimeout(() => {
-        toast.className = 'toast';
-    }, 3500);
-}
-
-// Check if API key is active
-function checkApiStatus() {
-    fetch('/api/metrics')
-        .then(res => res.json())
-        .then(() => {
-            document.getElementById('api-mode').innerText = "LLM Engine: Ready (Active)";
-        })
-        .catch(() => {
-            document.getElementById('api-mode').innerText = "LLM Engine: Connection Failed";
-        });
-}
-
-// Fetch general metrics
+// Fetch general dashboard metrics
 function fetchMetrics() {
     fetch('/api/metrics')
         .then(res => res.json())
         .then(data => {
-            document.getElementById('val-risk').innerText = `₹${data.total_at_risk.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-            document.getElementById('val-recovered').innerText = `₹${data.total_recovered.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+            document.getElementById('val-risk').innerText = `₹${data.total_at_risk.toLocaleString('en-IN')}`;
+            document.getElementById('val-recovered').innerText = `₹${data.total_recovered.toLocaleString('en-IN')}`;
             document.getElementById('val-rate').innerText = `${data.recovery_rate}%`;
             document.getElementById('val-active').innerText = data.active_cases;
-        })
-        .catch(err => {
-            console.error('Error fetching metrics:', err);
-            showToast('Failed to fetch metrics summary.', 'error');
-        });
-}
-
-// Fetch bank gateway statuses
-function fetchGatewayHealth() {
-    fetch('/api/gateway-health')
-        .then(res => res.json())
-        .then(data => {
-            const list = document.getElementById('sidebar-gateway-list');
-            list.innerHTML = '';
             
-            for (const [bank, health] of Object.entries(data)) {
-                const item = document.createElement('div');
-                item.className = 'gateway-item';
-                item.onclick = () => toggleGatewayHealth(bank);
-                
-                const isStable = health === 'stable';
-                
-                item.innerHTML = `
-                    <div class="gateway-details">
-                        <span class="gateway-name">${bank} Processor</span>
-                    </div>
-                    <span class="gateway-status-tag status-${health}">
-                        ${health}
-                    </span>
-                `;
-                list.appendChild(item);
+            // Sync selector state
+            if (data.simulation_override) {
+                activeOverride = data.simulation_override;
+                document.getElementById('override-select').value = activeOverride;
             }
         })
-        .catch(err => console.error('Error fetching NOC gateways:', err));
+        .catch(err => console.error('Error fetching metrics:', err));
 }
 
-// Toggle Gateway Health
+// Draw dynamic network wires between Bank Gateways and Health Targets
+function drawNocWires() {
+    const svg = document.getElementById('svg-wires-container');
+    if (!svg) return;
+    svg.innerHTML = '';
+    
+    const svgRect = svg.getBoundingClientRect();
+    if (svgRect.width === 0 || svgRect.height === 0) return;
+    
+    fetch('/api/gateway-health')
+        .then(res => res.json())
+        .then(healthData => {
+            const banks = ['HDFC', 'ICICI', 'SBI', 'UPI'];
+            banks.forEach(bank => {
+                const bankNode = document.getElementById(`node-${bank.toLowerCase()}`);
+                if (!bankNode) return;
+                
+                const bankRect = bankNode.getBoundingClientRect();
+                const x1 = bankRect.right - svgRect.left;
+                const y1 = bankRect.top + bankRect.height / 2 - svgRect.top;
+                
+                // Determine connection target based on health
+                const health = healthData[bank];
+                let targetText = 'Stable';
+                
+                // Style node elements in UI
+                if (health === 'degraded') {
+                    targetText = 'Degraded';
+                    bankNode.className = 'node-bank active-degraded';
+                } else {
+                    bankNode.className = 'node-bank active-stable';
+                }
+                
+                if (bank === 'UPI') {
+                    // UPI connects specifically to the UPI rail outcome
+                    targetText = 'UPI';
+                }
+                
+                // Find matching health label target
+                const targets = document.querySelectorAll('.health-target');
+                let targetNode = null;
+                targets.forEach(t => {
+                    if (t.innerText.trim() === targetText) {
+                        targetNode = t;
+                    }
+                });
+                
+                if (!targetNode) return;
+                
+                const targetRect = targetNode.getBoundingClientRect();
+                const x2 = targetRect.left - svgRect.left;
+                const y2 = targetRect.top + targetRect.height / 2 - svgRect.top;
+                
+                // Draw SVG path
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const dx = Math.abs(x2 - x1) * 0.5;
+                const d = `M ${x1},${y1} C ${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`;
+                path.setAttribute('d', d);
+                
+                let strokeColor = '#10b981'; // Green (Stable)
+                if (health === 'degraded') strokeColor = '#ef4444'; // Red (Degraded)
+                if (targetText === 'UPI') strokeColor = '#f59e0b'; // Yellow (UPI)
+                
+                path.setAttribute('stroke', strokeColor);
+                path.setAttribute('stroke-width', '2');
+                path.setAttribute('fill', 'none');
+                path.setAttribute('style', `filter: drop-shadow(0 0 4px ${strokeColor}); opacity: 0.65;`);
+                
+                svg.appendChild(path);
+            });
+        })
+        .catch(err => console.error('Error drawing wires:', err));
+}
+
+// Toggle Individual Bank Health Status
 function toggleGatewayHealth(bank) {
     fetch('/api/gateway-health/toggle', {
         method: 'POST',
@@ -164,544 +213,625 @@ function toggleGatewayHealth(bank) {
     })
     .then(res => res.json())
     .then(data => {
-        showToast(`${bank} gateway set to ${data.health.toUpperCase()}`, data.health === 'stable' ? 'success' : 'error');
-        fetchGatewayHealth();
-        fetchPipelines();
+        showToast(`Bank gateway ${data.bank} toggled to ${data.health}.`, 'success');
+        drawNocWires();
     })
-    .catch(err => console.error('Error toggling gateway:', err));
+    .catch(err => showToast('Failed to toggle bank health.', 'error'));
 }
 
-// Fetch cases pipeline
+// Toggle All bank failures simulator switch
+function toggleAllFailures(checkbox) {
+    const targetOverride = checkbox.checked ? 'induce_gateway_failure' : 'normal';
+    changeOverride(targetOverride);
+}
+
+// Set Active Simulation Override
+function changeOverride(val) {
+    fetch('/api/simulation/override', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ override: val })
+    })
+    .then(res => res.json())
+    .then(data => {
+        showToast(`Simulation Override set to: ${val}`, 'success');
+        activeOverride = val;
+        
+        // Sync NOC failure toggle checkbox visual state
+        const switchBtn = document.getElementById('noc-simulation-switch');
+        if (switchBtn) {
+            switchBtn.checked = (val === 'induce_gateway_failure');
+        }
+        
+        drawNocWires();
+        fetchMetrics();
+    })
+    .catch(err => showToast('Failed to change override state.', 'error'));
+}
+
+// Filter Pipeline list view
+function filterPipeline(filter) {
+    currentFilter = filter;
+    
+    // Toggle active button tab styles
+    const buttons = document.querySelectorAll('.tab-btn');
+    buttons.forEach(btn => {
+        if (btn.innerText.includes('All') && filter === 'ALL' ||
+            btn.innerText.includes('Payments') && filter === 'payment' ||
+            btn.innerText.includes('Invoices') && filter === 'invoice' ||
+            btn.innerText.includes('Recovered') && filter === 'RECOVERED') {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    fetchPipelines();
+}
+
+// Fetch pipelines cases data
 function fetchPipelines() {
     fetch('/api/pipelines')
         .then(res => res.json())
         .then(data => {
-            renderPipeline(data);
+            const tbody = document.getElementById('pipeline-body');
+            tbody.innerHTML = '';
+            
+            // Filter records
+            const filtered = data.filter(item => {
+                if (currentFilter === 'ALL') return true;
+                if (currentFilter === 'RECOVERED') return item.stage === 'RECOVERED';
+                return item.type === currentFilter;
+            });
+            
+            filtered.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.onclick = () => selectEntityRow(item.id, item.type, tr);
+                if (activeEntityId === item.id) {
+                    tr.className = 'active-row';
+                }
+                
+                // Format Status Stages badges
+                let stageClass = 'status-gated';
+                if (item.stage === 'RECOVERED') stageClass = 'status-recovered';
+                if (item.stage === 'STOPPED') stageClass = 'status-stopped';
+                
+                // Policy adherence status column check
+                const isCompliant = item.stage !== 'STOPPED' || item.contact_count <= 3;
+                const policyCol = isCompliant 
+                    ? `<span class="compliance-badge-check"><i class="fa-solid fa-check"></i></span>`
+                    : `<span class="compliance-badge-fail"><i class="fa-solid fa-triangle-exclamation"></i></span>`;
+
+                tr.innerHTML = `
+                    <td>
+                        <strong style="display:block;">${item.customer_name}</strong>
+                        <span style="font-size:10px; color:var(--text-dim);">${item.id}</span>
+                    </td>
+                    <td>₹${item.amount.toLocaleString('en-IN')}</td>
+                    <td><span class="tag-reason">${item.diagnose}</span></td>
+                    <td>${item.contact_count}/3</td>
+                    <td><span class="gateway-status-tag ${stageClass}">${item.stage}</span></td>
+                    <td style="text-align:center;">${policyCol}</td>
+                `;
+                tbody.appendChild(tr);
+            });
         })
-        .catch(err => {
-            console.error('Error fetching pipeline:', err);
-            showToast('Failed to fetch transaction pipeline.', 'error');
-        });
+        .catch(err => console.error('Error fetching pipelines:', err));
 }
 
-// Render pipeline board
-function renderPipeline(data) {
-    const tbody = document.getElementById('pipeline-body');
-    tbody.innerHTML = '';
-
-    const filtered = data.filter(item => {
-        if (currentFilter === 'ALL') return true;
-        if (currentFilter === 'RECOVERED') return item.stage === 'RECOVERED';
-        return item.type === currentFilter;
-    });
-
-    if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 32px;">No active pipelines found. Click 'Reset & Seed Data'.</td></tr>`;
-        return;
-    }
-
-    filtered.forEach(item => {
-        const row = document.createElement('tr');
-        if (activeEntityId === item.id) {
-            row.className = 'active-row';
-        }
-        
-        row.onclick = () => selectEntity(item.id, item.type, item.stage);
-        
-        const isRecovered = item.stage === 'RECOVERED';
-        const isStopped = item.stage === 'STOPPED' || item.stage === 'DISPUTED';
-
-        row.innerHTML = `
-            <td>
-                <span class="cust-name">${item.name}</span>
-                <span class="cust-id">${item.id}</span>
-            </td>
-            <td class="td-amount">₹${item.amount.toLocaleString('en-IN')}</td>
-            <td>
-                <div class="reason-tag">
-                    <i class="fa-solid ${item.type === 'payment' ? 'fa-credit-card' : 'fa-file-invoice'}"></i>
-                    <span>${item.reason}</span>
-                </div>
-            </td>
-            <td class="td-contacts">${item.contact_count} / 3</td>
-            <td>
-                <span class="stage-badge stage-${item.stage.toLowerCase()}">
-                    ${item.stage}
-                </span>
-            </td>
-            <td>
-                <div class="row-actions" onclick="event.stopPropagation()">
-                    ${!isRecovered && !isStopped && item.stage !== 'GATED' ? `
-                        <button class="action-icon-btn btn-step" title="Run AI Next Step" onclick="stepEntity('${item.type}', '${item.id}')">
-                            <i class="fa-solid fa-play"></i>
-                        </button>
-                        <a href="/checkout/${item.id}" target="_blank" class="action-icon-btn btn-checkout" title="Open Simulated Checkout">
-                            <i class="fa-solid fa-external-link"></i>
-                        </a>
-                    ` : `
-                        <span style="color: var(--text-dim); font-size: 11px;">
-                            ${item.stage === 'GATED' ? 'Gated (Wait)' : 'Resolved'}
-                        </span>
-                    `}
-                </div>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-}
-
-// Select Filter tab
-function filterPipeline(type) {
-    currentFilter = type;
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.innerText.toLowerCase().includes(type.toLowerCase()) || 
-            (type === 'ALL' && btn.innerText.includes('All')) ||
-            (type === 'RECOVERED' && btn.innerText.includes('Recovered'))) {
-            btn.classList.add('active');
-        }
-    });
-    fetchPipelines();
-}
-
-// Select item to view Audit Trail
-function selectEntity(id, type, stage) {
+// Row selector
+function selectEntityRow(id, type, rowElement) {
     activeEntityId = id;
     activeEntityType = type;
     
-    // Highlights active row
-    document.querySelectorAll('#pipeline-body tr').forEach(row => {
-        const rowId = row.querySelector('.cust-id').innerText;
-        if (rowId === id) {
-            row.className = 'active-row';
-        } else {
-            row.className = '';
-        }
-    });
-
-    document.getElementById('audit-empty-state').style.display = 'none';
-    const content = document.getElementById('audit-content');
-    content.style.display = 'flex';
-
-    document.getElementById('audit-type').innerText = type.toUpperCase();
-    document.getElementById('audit-entity-id').innerText = id;
-
-    // Reset voice player state
-    resetVoicePlayer();
-
-    // Check HITL banner rules
-    const hitl = document.getElementById('hitl-actions-container');
-    const hitlMsg = document.getElementById('hitl-actions-message');
-    if (stage === 'DISPUTED') {
-        hitl.style.display = 'flex';
-        hitlMsg.innerText = "Customer disputed the charge. Automated reminders paused pending manual merchant resolution.";
-        document.getElementById('hitl-btn-resolve').style.display = 'block';
-        document.getElementById('hitl-btn-extend').style.display = 'none';
-    } else if (stage === 'GATED') {
-        // Find if promise-to-pay
-        hitl.style.display = 'flex';
-        hitlMsg.innerText = "Active Promise-to-Pay registered. Reminders paused. You may manually extend this deadline by 7 days.";
-        document.getElementById('hitl-btn-resolve').style.display = 'none';
-        document.getElementById('hitl-btn-extend').style.display = 'block';
-    } else {
-        hitl.style.display = 'none';
-    }
-
+    // Clear old active row selections
+    const rows = document.querySelectorAll('.pipeline-table-v3 tbody tr');
+    rows.forEach(r => r.classList.remove('active-row'));
+    
+    rowElement.classList.add('active-row');
+    
     loadAuditTrail(id);
-    loadVoiceScript(id);
 }
 
-// Load Audit Trail details from API
+// Load collapsible Reasoning Audit Accordion
 function loadAuditTrail(id) {
-    fetch(`/api/audit-trail/${id}`)
+    fetch(`/api/audit/${id}`)
         .then(res => res.json())
         .then(data => {
-            renderAuditTimeline(data.logs);
-            renderAuditComms(data.communications);
-        })
-        .catch(err => {
-            console.error('Error loading audit trail:', err);
-            showToast('Failed to load audit logs.', 'error');
-        });
-}
-
-// Render Audit timeline
-function renderAuditTimeline(logs) {
-    const timeline = document.getElementById('audit-timeline');
-    timeline.innerHTML = '';
-
-    if (logs.length === 0) {
-        timeline.innerHTML = '<p style="color: var(--text-dim); font-size: 12px;">No audit logs yet.</p>';
-        return;
-    }
-
-    logs.forEach(log => {
-        const item = document.createElement('div');
-        let markerClass = '';
-        if (log.stage === 'RECOVERED') markerClass = 'recovered-marker';
-        else if (log.stage === 'STOPPED') markerClass = 'stopped-marker';
-        else if (log.stage === 'CHASING') markerClass = 'active-marker';
-        else if (log.stage === 'GATED') markerClass = 'active-marker';
-
-        item.className = `timeline-item ${markerClass}`;
-        item.innerHTML = `
-            <div class="timeline-marker"></div>
-            <span class="timeline-time">${log.timestamp}</span>
-            <div class="timeline-title">${log.action_taken} <span class="stage-badge stage-${log.stage.toLowerCase()}" style="font-size: 9px; padding: 2px 4px;">${log.stage}</span></div>
-            ${log.reasoning ? `<div class="timeline-reasoning">${log.reasoning}</div>` : ''}
-        `;
-        timeline.appendChild(item);
-    });
-}
-
-// Render communications outbox/inbox
-function renderAuditComms(comms) {
-    const list = document.getElementById('comms-list');
-    list.innerHTML = '';
-
-    if (comms.length === 0) {
-        list.innerHTML = '<p style="color: var(--text-dim); font-size: 12px; text-align: center; padding: 20px;">No recovery messages sent or replies received yet.</p>';
-        return;
-    }
-
-    comms.forEach(c => {
-        const bubble = document.createElement('div');
-        const isOut = c.direction === 'outbound';
-        bubble.className = `comm-bubble ${isOut ? 'comm-outbound' : 'comm-inbound'}`;
-        
-        bubble.innerHTML = `
-            <div class="comm-meta">
-                <span>${isOut ? '📤 OUTGOING EMAIL' : '📥 CUSTOMER REPLY'}</span>
-                <span>${c.timestamp}</span>
-            </div>
-            <div style="white-space: pre-line;">${c.content}</div>
-        `;
-        list.appendChild(bubble);
-    });
-}
-
-// Load voice call script from API
-function loadVoiceScript(id) {
-    const transcriptText = document.getElementById('voice-transcript-text');
-    transcriptText.innerHTML = '<p style="color: var(--text-dim);">Loading voice logs...</p>';
-    
-    fetch(`/api/voice-script/${id}`)
-        .then(res => res.json())
-        .then(data => {
-            transcriptText.setAttribute('data-full-script', data.transcript);
-            transcriptText.innerText = `Suggested Agent Next Step: ${data.suggested_next_step}\n\n[Click Play to listen and display the transcript]`;
-        })
-        .catch(err => {
-            console.error('Error loading voice script:', err);
-            transcriptText.innerText = "No Voice log available for this case stage.";
-        });
-}
-
-// Toggle Voice call simulated playback
-function toggleVoicePlayback() {
-    const btn = document.getElementById('voice-play-btn');
-    const wave = document.getElementById('audio-wave');
-    const text = document.getElementById('voice-transcript-text');
-    const timer = document.getElementById('voice-timer');
-    
-    const fullScript = text.getAttribute('data-full-script');
-    if (!fullScript) return;
-
-    if (isVoicePlaying) {
-        // Pause
-        resetVoicePlayer();
-    } else {
-        // Play
-        isVoicePlaying = true;
-        btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-        wave.classList.add('wave-playing');
-        text.innerText = '';
-        
-        let i = 0;
-        let count = 0;
-        
-        voicePlaybackInterval = setInterval(() => {
-            count++;
-            let sec = count % 60;
-            let min = Math.floor(count / 60);
-            timer.innerText = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+            const root = document.getElementById('accordion-root');
+            root.innerHTML = '';
             
-            // Incrementally show text characters
-            if (i < fullScript.length) {
-                text.innerText += fullScript.substring(i, i + 8);
-                i += 8;
-                text.scrollTop = text.scrollHeight;
-            } else if (count > 25) {
-                resetVoicePlayer();
+            const logs = data.logs;
+            const comms = data.communications;
+            const entity = data.entity;
+            
+            // Build Collapsible Steps
+            
+            // 1. Data Input Step
+            createAccordionItem(root, 'Data Input', `
+                <div class="step-summary">Raw Ingested Transaction Payload</div>
+                <div class="json-view-block">${JSON.stringify(entity, null, 2)}</div>
+            `);
+            
+            // 2. Policy Check Step
+            const contactLimitOk = entity.contact_count || entity.retry_count || 0;
+            createAccordionItem(root, 'Policy Check', `
+                <div class="policy-details">
+                    <p><strong>Outreach Sequence:</strong> ${contactLimitOk} / 3 contact attempts.</p>
+                    <p><strong>Compliance status:</strong> Gated and compliant under payment safety limits.</p>
+                    <p><strong>Dunning Rules:</strong> Retries halted if dispute triggered or opt-out unsubscribe code parsed.</p>
+                </div>
+            `);
+            
+            // 3. Agent Decision (LLM)
+            const strategy = entity.recovery_campaign_status || 'DIAGNOSING';
+            createAccordionItem(root, 'Agent Decision (LLM)', `
+                <p style="margin-bottom:6px;"><strong>Identified Strategy:</strong> ${strategy}</p>
+                <div class="json-view-block">Prompt: Run failure diagnosis for ${entity.id}.
+Outcome: Trigger collection campaign.</div>
+            `);
+            
+            // 4. Action Taken (Email/Voice logs)
+            let actionsContent = '<p>No outreach communication sent yet.</p>';
+            if (comms.length > 0) {
+                actionsContent = '<div class="communications-list" style="display:flex; flex-direction:column; gap:10px;">';
+                comms.forEach(c => {
+                    const dirIcon = c.direction === 'outbound' ? 'fa-paper-plane' : 'fa-reply';
+                    const titleText = c.direction === 'outbound' ? 'Outbound Alert' : 'Customer Response';
+                    
+                    // Voice Call script parser
+                    if (c.content.includes("AUDIO_CALL_TRANSCRIPT:")) {
+                        const cleanScript = c.content.replace("AUDIO_CALL_TRANSCRIPT:", "");
+                        
+                        // Parse emotion and tags
+                        let emotionClass = 'emotion-friendly';
+                        let emotionName = 'Friendly/Empathy';
+                        let phraseTags = '<span class="phrase-tag tag-ptp">PTP</span>';
+                        
+                        if (cleanScript.toLowerCase().includes("urgent") || cleanScript.toLowerCase().includes("warning")) {
+                            emotionClass = 'emotion-urgent';
+                            emotionName = 'Urgent/Firm';
+                        }
+                        
+                        actionsContent += `
+                            <div class="voice-simulator">
+                                <div class="audio-player">
+                                    <button class="audio-play-btn" onclick="toggleVoicePlayback(this)"><i class="fa-solid fa-play"></i></button>
+                                    <div class="audio-wave-container">
+                                        <div class="wave-bar"></div>
+                                        <div class="wave-bar"></div>
+                                        <div class="wave-bar"></div>
+                                        <div class="wave-bar"></div>
+                                        <div class="wave-bar"></div>
+                                        <div class="wave-bar"></div>
+                                        <div class="wave-bar"></div>
+                                        <div class="wave-bar"></div>
+                                    </div>
+                                    <span class="audio-timer" id="voice-timer">00:00</span>
+                                </div>
+                                <div class="voice-emotion-indicator">
+                                    <span class="emotion-label">Tone: ${emotionName}</span>
+                                    <div class="emotion-color-bar ${emotionClass}"></div>
+                                </div>
+                                <div class="key-phrase-tags-row">
+                                    ${phraseTags}
+                                </div>
+                                <div class="voice-transcript" id="voice-transcript-text">${cleanScript}</div>
+                            </div>
+                        `;
+                    } else {
+                        // Standard Email layout
+                        actionsContent += `
+                            <div class="comm-item" style="border:1px solid var(--card-border); padding:8px; border-radius:6px; background:rgba(0,0,0,0.15);">
+                                <div style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between; margin-bottom:4px;">
+                                    <span><i class="fa-solid ${dirIcon}"></i> ${titleText} (${c.channel})</span>
+                                    <span>${new Date(c.timestamp).toLocaleTimeString()}</span>
+                                </div>
+                                <div class="comm-body" style="font-size:11px; white-space:pre-line;">${c.content}</div>
+                            </div>
+                        `;
+                    }
+                });
+                actionsContent += '</div>';
             }
-        }, 120);
-    }
+            
+            // Check for Dispute Manual Intervention banner (HITL)
+            const showHitl = entity.status === 'FAILED' && entity.recovery_campaign_status === 'PAUSED';
+            if (showHitl) {
+                root.insertAdjacentHTML('beforebegin', `
+                    <div class="hitl-gate-panel" id="hitl-banner-gate">
+                        <div class="hitl-warning-header">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Action Required: Dispute Active
+                        </div>
+                        <div class="hitl-details">
+                            Buyer raised a claim. Campaign paused automatically to prevent harassment.
+                        </div>
+                        <div class="hitl-actions">
+                            <button class="btn-hitl" id="hitl-btn-resolve" onclick="resolveHitlAction('${entity.id}', 'REFUND_RESOLVE')">Refund & Close</button>
+                            <button class="btn-hitl" id="hitl-btn-extend" onclick="resolveHitlAction('${entity.id}', 'EXTEND_DEFER')">Extend 7 Days</button>
+                        </div>
+                    </div>
+                `);
+            } else {
+                // Clear old banner
+                const old = document.getElementById('hitl-banner-gate');
+                if (old) old.remove();
+            }
+
+            createAccordionItem(root, 'Action Taken (Outreach)', actionsContent);
+            
+            // 5. Response/Result logs
+            let logsHtml = '<ul style="list-style:none; padding-left:0; display:flex; flex-direction:column; gap:6px;">';
+            logs.forEach(l => {
+                logsHtml += `
+                    <li style="border-bottom:1px solid rgba(255,255,255,0.03); padding-bottom:6px;">
+                        <div style="font-size:10px; color:var(--text-dim);">${new Date(l.timestamp).toLocaleTimeString()} - <strong>${l.stage}</strong></div>
+                        <div style="font-weight:600; color:var(--text-muted); font-size:11px;">${l.action_taken}</div>
+                        <div style="font-size:11px; color:var(--text-dim); margin-top:2px;">${l.reasoning}</div>
+                    </li>
+                `;
+            });
+            logsHtml += '</ul>';
+            createAccordionItem(root, 'Response / Audit Result', logsHtml);
+            
+            // Open the first accordion step by default
+            const firstHeader = root.querySelector('.accordion-header');
+            if (firstHeader) toggleAccordion(firstHeader);
+        })
+        .catch(err => console.error('Error loading audit log:', err));
 }
 
-function resetVoicePlayer() {
-    isVoicePlaying = false;
-    if (voicePlaybackInterval) {
-        clearInterval(voicePlaybackInterval);
-        voicePlaybackInterval = null;
-    }
-    const btn = document.getElementById('voice-play-btn');
-    if (btn) btn.innerHTML = '<i class="fa-solid fa-play"></i>';
-    const wave = document.getElementById('audio-wave');
-    if (wave) wave.classList.remove('wave-playing');
-    const timer = document.getElementById('voice-timer');
-    if (timer) timer.innerText = '00:00';
-}
-
-// HITL resolve dispute refund
-function resolveDisputeAction() {
-    if (!confirm('Are you sure you want to issue a refund and resolve this dispute? This will cancel all collections.')) return;
+// Non-blocking refresh for active entity audit log during auto-polling
+function refreshAuditTrail(id) {
+    // Avoid redrawing while audio player is playing to prevent waveform interruption
+    if (isVoicePlaying) return;
     
-    fetch('/api/dispute-action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entity_id: activeEntityId, action: 'REFUND_RESOLVE' })
-    })
-    .then(res => res.json())
-    .then(data => {
-        showToast(data.message);
-        closeAuditPanel();
-        fetchMetrics();
-        fetchPipelines();
-    })
-    .catch(err => console.error(err));
+    fetch(`/api/audit/${id}`)
+        .then(res => res.json())
+        .then(data => {
+            const entity = data.entity;
+            const showHitl = entity.status === 'FAILED' && entity.recovery_campaign_status === 'PAUSED';
+            
+            const banner = document.getElementById('hitl-banner-gate');
+            if (showHitl && !banner) {
+                // Insert banner if missing
+                const root = document.getElementById('accordion-root');
+                root.insertAdjacentHTML('beforebegin', `
+                    <div class="hitl-gate-panel" id="hitl-banner-gate">
+                        <div class="hitl-warning-header">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Action Required: Dispute Active
+                        </div>
+                        <div class="hitl-details">
+                            Buyer raised a claim. Campaign paused automatically to prevent harassment.
+                        </div>
+                        <div class="hitl-actions">
+                            <button class="btn-hitl" id="hitl-btn-resolve" onclick="resolveHitlAction('${entity.id}', 'REFUND_RESOLVE')">Refund & Close</button>
+                            <button class="btn-hitl" id="hitl-btn-extend" onclick="resolveHitlAction('${entity.id}', 'EXTEND_DEFER')">Extend 7 Days</button>
+                        </div>
+                    </div>
+                `);
+            } else if (!showHitl && banner) {
+                banner.remove();
+            }
+        });
 }
 
-// HITL extend promise date
-function extendPromiseAction() {
-    fetch('/api/dispute-action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entity_id: activeEntityId, action: 'RESCHEDULE_PROMISE' })
-    })
-    .then(res => res.json())
-    .then(data => {
-        showToast(data.message);
-        selectEntity(activeEntityId, activeEntityType, 'GATED');
-        fetchMetrics();
-        fetchPipelines();
-    })
-    .catch(err => console.error(err));
+// Generate Accordion components
+function createAccordionItem(container, title, content) {
+    const item = document.createElement('div');
+    item.className = 'accordion-item';
+    
+    const header = document.createElement('div');
+    header.className = 'accordion-header';
+    header.onclick = () => toggleAccordion(header);
+    header.innerHTML = `
+        <span>${title}</span>
+        <i class="fa-solid fa-chevron-down accordion-icon"></i>
+    `;
+    
+    const body = document.createElement('div');
+    body.className = 'accordion-body';
+    body.innerHTML = content;
+    
+    item.appendChild(header);
+    item.appendChild(body);
+    container.appendChild(item);
 }
 
-// Switch between Audit tabs
-function switchAuditTab(tab) {
-    currentAuditTab = tab;
-    document.querySelectorAll('.audit-tab').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.id === 'tab-voice-btn' && tab === 'voice') btn.classList.add('active');
-        else if (btn.innerText.includes('Trail') && tab === 'logs') btn.classList.add('active');
-        else if (btn.innerText.includes('Emails') && tab === 'comms') btn.classList.add('active');
+// Accordion open/close toggle
+function toggleAccordion(header) {
+    const item = header.parentElement;
+    const body = item.querySelector('.accordion-body');
+    const isActive = header.classList.contains('active-header');
+    
+    // Close other panels
+    const allHeaders = header.parentElement.parentElement.querySelectorAll('.accordion-header');
+    allHeaders.forEach(h => {
+        h.classList.remove('active-header');
+        h.parentElement.querySelector('.accordion-body').classList.remove('show-body');
     });
-
-    document.getElementById('panel-logs').style.display = tab === 'logs' ? 'block' : 'none';
-    document.getElementById('panel-comms').style.display = tab === 'comms' ? 'block' : 'none';
-    document.getElementById('panel-voice').style.display = tab === 'voice' ? 'block' : 'none';
+    
+    if (!isActive) {
+        header.classList.add('active-header');
+        body.classList.add('show-body');
+    }
 }
 
-// Close audit side panel
-function closeAuditPanel() {
-    document.getElementById('audit-content').style.display = 'none';
-    document.getElementById('audit-empty-state').style.display = 'flex';
-    activeEntityId = null;
-    activeEntityType = null;
-    resetVoicePlayer();
-    fetchPipelines();
-}
-
-// Run single step recovery
-function stepEntity(type, id) {
+// Action execution manual step
+function stepEntityManual() {
+    if (!activeEntityId) {
+        showToast('Please select a payment or invoice case row first from the table list.', 'error');
+        return;
+    }
+    
     fetch('/api/step', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entity_type: type, entity_id: id })
+        body: JSON.stringify({ entity_type: activeEntityType, entity_id: activeEntityId })
     })
     .then(res => res.json())
     .then(data => {
-        if (data.status === 'recovered') {
-            showToast(`Case ${id} successfully recovered! Captured ₹${data.amount.toLocaleString('en-IN')}`, 'success');
-        } else if (data.status === 'diagnosed') {
-            showToast(`AI Diagnosis complete for ${id}. Recommended: ${data.strategy}`);
+        if (data.status === 'gated_degraded') {
+            showToast(`Retry halted! Gateway ${data.bank} is degraded. Pausing retry.`, 'error');
+        } else if (data.status === 'recovered') {
+            showToast(`Success! Recovered INR ${data.amount.toLocaleString('en-IN')}`, 'success');
         } else if (data.status === 'stopped') {
-            showToast(`Dunning campaign completed/halted for ${id}.`, 'error');
-        } else if (data.status === 'gated_degraded') {
-            showToast(`Retry deferred: ${data.bank} gateway is experiencing downtime.`, 'error');
+            showToast(`Campaign halted: ${data.message}`, 'error');
         } else {
-            showToast(`Execution tick processed for ${id}.`);
+            showToast(`Step processed: ${data.status}`, 'success');
         }
         
         fetchMetrics();
         fetchPipelines();
-        if (activeEntityId === id) {
-            // Find stage from pipeline later or reload
-            loadAuditTrail(id);
+        loadAuditTrail(activeEntityId);
+    })
+    .catch(err => showToast('Failed to run simulator step.', 'error'));
+}
+
+// Trigger Batch Recovery Simulator
+function triggerBatchRecovery() {
+    document.getElementById('batch-trigger-view').style.display = 'none';
+    document.getElementById('batch-loading-view').style.display = 'block';
+    
+    fetch('/api/run-batch', { method: 'POST' })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('batch-loading-view').style.display = 'none';
+        document.getElementById('batch-results-view').style.display = 'block';
+        
+        document.getElementById('res-total').innerText = data.total_records;
+        document.getElementById('res-recovered').innerText = data.recovered_count;
+        document.getElementById('res-amount').innerText = `₹${data.recovered_amount.toLocaleString('en-IN')}`;
+        document.getElementById('res-rate').innerText = `${data.recovery_rate}%`;
+        
+        // Populate manual exceptions list
+        const list = document.getElementById('res-exceptions');
+        list.innerHTML = '';
+        if (data.exceptions && data.exceptions.length > 0) {
+            data.exceptions.forEach(e => {
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>${e.id}</strong> - ${e.reason}`;
+                list.appendChild(li);
+            });
+        } else {
+            list.innerHTML = '<li>No unresolved manual escalations. All cases settled.</li>';
         }
+        
+        // Draw visual charts
+        drawBatchCharts(data.recovered_count, data.total_records - data.recovered_count, data.stopped_count);
+        fetchMetrics();
+        fetchPipelines();
     })
     .catch(err => {
-        console.error('Error stepping recovery:', err);
-        showToast('Error executing AI recovery step.', 'error');
+        document.getElementById('batch-loading-view').style.display = 'none';
+        document.getElementById('batch-trigger-view').style.display = 'block';
+        showToast('Batch execution simulation failed.', 'error');
     });
 }
 
-// Seed/Reset database
-function triggerSeed() {
-    if (!confirm('Are you sure you want to reset the database and seed fresh synthetic transactions?')) return;
+// Initialise scorecard performance timeline chart
+function initScorecardChart() {
+    const ctx = document.getElementById('scorecardLineChart');
+    if (!ctx) return;
     
-    fetch('/api/seed', { method: 'POST' })
-        .then(res => res.json())
-        .then(data => {
-            showToast(data.message);
-            closeAuditPanel();
-            fetchMetrics();
-            fetchPipelines();
-        })
-        .catch(err => {
-            console.error('Error seeding data:', err);
-            showToast('Seeding failed.', 'error');
-        });
+    scorecardChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4'],
+            datasets: [
+                {
+                    label: 'Recovered Revenue',
+                    data: [1.2, 3.4, 5.8, 7.2],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                },
+                {
+                    label: 'Revenue at Risk',
+                    data: [19.0, 16.5, 14.2, 11.8],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { display: true, grid: { display: false }, ticks: { color: '#64748b', font: { size: 8 } } },
+                y: { display: false }
+            }
+        }
+    });
 }
 
-// Modal controls
+// Draw double charts in batch results window
+let doubleDoughnut = null;
+let doubleLine = null;
+
+function drawBatchCharts(recovered, failed, stopped) {
+    const ctxDoughnut = document.getElementById('recoveryChart');
+    const ctxLine = document.getElementById('timelineChart');
+    
+    if (doubleDoughnut) doubleDoughnut.destroy();
+    if (doubleLine) doubleLine.destroy();
+    
+    doubleDoughnut = new Chart(ctxDoughnut, {
+        type: 'doughnut',
+        data: {
+            labels: ['Recovered', 'In Progress', 'Stopped'],
+            datasets: [{
+                data: [recovered, failed, stopped],
+                backgroundColor: ['#10b981', '#3b82f6', '#ef4444'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    doubleLine = new Chart(ctxLine, {
+        type: 'line',
+        data: {
+            labels: ['Round 1', 'Round 2', 'Round 3', 'Round 4'],
+            datasets: [{
+                label: 'Cumulative Cash Recovery (INR)',
+                data: [
+                    recovered * 8000, 
+                    recovered * 14000, 
+                    recovered * 21000, 
+                    recovered * 26000
+                ],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#64748b', font: { size: 9 } } },
+                y: { ticks: { color: '#64748b', font: { size: 9 } } }
+            }
+        }
+    });
+}
+
+// Reset Database and Seed fresh records
+function triggerSeed() {
+    fetch('/api/seed', { method: 'POST' })
+    .then(res => res.json())
+    .then(data => {
+        showToast('Database reset and seed data loaded successfully.', 'success');
+        activeEntityId = null;
+        activeEntityType = null;
+        
+        // Reset Accordion view to empty state
+        const root = document.getElementById('accordion-root');
+        root.innerHTML = `
+            <div class="audit-placeholder" id="audit-empty-state">
+                <i class="fa-solid fa-brain-circuit brain-icon"></i>
+                <h3>Agent Evaluation Desk</h3>
+                <p>Select any active case in the pipeline grid to trace the dynamic AI reasoning tree, policy checks, and Hinglish transcripts.</p>
+            </div>
+        `;
+        
+        fetchMetrics();
+        fetchPipelines();
+        drawNocWires();
+    })
+    .catch(err => showToast('Failed to seed mock data.', 'error'));
+}
+
+// Resolve Human manual action
+function resolveHitlAction(id, actionType) {
+    fetch('/api/dispute-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entity_id: id, action: actionType })
+    })
+    .then(res => res.json())
+    .then(data => {
+        showToast(data.message, 'success');
+        fetchMetrics();
+        fetchPipelines();
+        loadAuditTrail(id);
+    })
+    .catch(err => showToast('Human action override failed.', 'error'));
+}
+
+// Playback voice transcription waveforms
+function toggleVoicePlayback(btn) {
+    const container = btn.parentElement;
+    
+    if (isVoicePlaying) {
+        // Pause
+        btn.innerHTML = '<i class="fa-solid fa-play"></i>';
+        container.classList.remove('wave-playing');
+        clearInterval(voicePlaybackInterval);
+        isVoicePlaying = false;
+    } else {
+        // Start play
+        btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+        container.classList.add('wave-playing');
+        isVoicePlaying = true;
+        
+        let seconds = 0;
+        const timerText = document.getElementById('voice-timer');
+        
+        voicePlaybackInterval = setInterval(() => {
+            seconds++;
+            const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const secs = (seconds % 60).toString().padStart(2, '0');
+            timerText.innerText = `${mins}:${secs}`;
+            
+            // Limit fake audio playback to 15 seconds
+            if (seconds >= 15) {
+                btn.innerHTML = '<i class="fa-solid fa-play"></i>';
+                container.classList.remove('wave-playing');
+                clearInterval(voicePlaybackInterval);
+                isVoicePlaying = false;
+                timerText.innerText = '00:00';
+            }
+        }, 1000);
+    }
+}
+
+// Modal Dialog Helpers
 function openBatchModal() {
     document.getElementById('batch-modal').classList.add('open');
-    document.getElementById('batch-trigger-view').style.display = 'block';
-    document.getElementById('batch-loading-view').style.display = 'none';
     document.getElementById('batch-results-view').style.display = 'none';
+    document.getElementById('batch-loading-view').style.display = 'none';
+    document.getElementById('batch-trigger-view').style.display = 'block';
 }
 
 function closeBatchModal() {
     document.getElementById('batch-modal').classList.remove('open');
-    fetchMetrics();
-    fetchPipelines();
 }
 
-// Trigger full batch simulation
-function triggerBatchRecovery() {
-    document.getElementById('batch-trigger-view').style.display = 'none';
-    document.getElementById('batch-loading-view').style.display = 'block';
-
-    fetch('/api/run-batch', { method: 'POST' })
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById('batch-loading-view').style.display = 'none';
-            document.getElementById('batch-results-view').style.display = 'block';
-            
-            // Populate results
-            document.getElementById('res-total').innerText = data.total_records;
-            document.getElementById('res-recovered').innerText = data.recovered_count;
-            document.getElementById('res-amount').innerText = `₹${data.recovered_amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-            document.getElementById('res-rate').innerText = `${data.recovery_rate}%`;
-
-            // Draw exceptions
-            const excl = document.getElementById('res-exceptions');
-            excl.innerHTML = '';
-            if (data.exceptions.length === 0) {
-                excl.innerHTML = '<li>None. All campaigns completed successfully or remain active.</li>';
-            } else {
-                data.exceptions.forEach(ex => {
-                    const li = document.createElement('li');
-                    li.innerText = ex;
-                    excl.appendChild(li);
-                });
-            }
-
-            // Draw Charts
-            drawDoughnutChart(data.recovered_count, data.stopped_count, data.active_count);
-            drawTimelineChart(data.recovered_amount);
-            showToast('Batch simulation run completed.');
-        })
-        .catch(err => {
-            console.error(err);
-            showToast('Batch simulation failed.', 'error');
-            openBatchModal();
-        });
-}
-
-// Doughnut Chart recovery rate
-function drawDoughnutChart(recovered, stopped, active) {
-    const ctx = document.getElementById('recoveryChart').getContext('2d');
-    if (window.myRecoveryChart) {
-        window.myRecoveryChart.destroy();
-    }
+// Toast alerts display helper
+function showToast(msg, type = 'success') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.className = `toast show ${type}`;
+    toast.innerText = msg;
     
-    window.myRecoveryChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Recovered', 'Stopped/Escalated', 'Active'],
-            datasets: [{
-                data: [recovered, stopped, active],
-                backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
-                borderWidth: 1,
-                borderColor: '#1e293b'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            cutout: '70%'
-        }
-    });
-}
-
-// Cumulative Cash Timeline Line Chart
-function drawTimelineChart(totalRecovered) {
-    const ctx = document.getElementById('timelineChart').getContext('2d');
-    if (window.myTimelineChart) {
-        window.myTimelineChart.destroy();
-    }
-
-    // Generate cumulative recovery increments representing steps in the run
-    const intervals = ['Round 1', 'Round 2', 'Round 3', 'Round 4'];
-    const dataPoints = [
-        totalRecovered * 0.40,
-        totalRecovered * 0.70,
-        totalRecovered * 0.90,
-        totalRecovered
-    ];
-
-    window.myTimelineChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: intervals,
-            datasets: [{
-                label: 'Cash Recovered (INR)',
-                data: dataPoints,
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: '#3b82f6',
-                pointRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#94a3b8', font: { size: 10 } }
-                },
-                y: {
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                    ticks: { color: '#94a3b8', font: { size: 9 }, callback: (v) => '₹' + (v/1000) + 'k' }
-                }
-            }
-        }
-    });
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3500);
 }

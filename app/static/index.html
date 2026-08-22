@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RazorRecovery AI — Merchant Dunning Dashboard</title>
+    <title>RazorRecovery AI v2 — Command Center</title>
     <!-- Google Fonts: Inter & Outfit -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome for Premium Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js for Recovery Visualizations -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="styles.css?v=2">
+    <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
     <canvas id="bg-canvas"></canvas>
+    
     <div class="dashboard-container">
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
@@ -21,7 +22,7 @@
                 <i class="fa-solid fa-wand-magic-sparkles logo-icon"></i>
                 <div class="logo-text">
                     <span class="logo-title">RazorRecovery</span>
-                    <span class="logo-subtitle">Agentic Revenue Engine</span>
+                    <span class="logo-subtitle">AI v2</span>
                 </div>
             </div>
             
@@ -30,21 +31,13 @@
                 <a href="#" class="nav-item" onclick="triggerSeed()"><i class="fa-solid fa-rotate-left"></i> Reset & Seed Data</a>
                 <a href="#" class="nav-item" onclick="openBatchModal()"><i class="fa-solid fa-rocket"></i> Run Batch Simulator</a>
             </nav>
-
-            <!-- Gateway NOC Widget -->
-            <div class="sidebar-widget">
-                <h4 class="widget-title"><i class="fa-solid fa-server"></i> Bank Gateways (NOC)</h4>
-                <div class="gateway-list" id="sidebar-gateway-list">
-                    <!-- Populated dynamically -->
-                </div>
-            </div>
             
             <div class="sidebar-footer">
                 <div class="system-status">
                     <div class="status-indicator online"></div>
                     <div class="status-details">
                         <span class="status-name">Agent Status: Active</span>
-                        <span class="status-mode" id="api-mode">Checking AI Config...</span>
+                        <span class="status-mode" id="api-mode">LLM Engine: Ready (Active)</span>
                     </div>
                 </div>
             </div>
@@ -52,86 +45,142 @@
 
         <!-- Main Workspace -->
         <main class="main-content">
-            <!-- Header -->
-            <header class="header">
-                <div class="header-titles">
-                    <h1>Automated Recovery Dashboard</h1>
-                    <p>Track autonomous payment retries, invoice dunning, and checkout abandonment campaigns.</p>
+            <!-- Header Bar with Global Search -->
+            <header class="header-bar">
+                <div class="search-wrapper">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" placeholder="Global Search..." class="global-search-input">
+                    <div class="suggested-tags">
+                        <span class="tag">AI prompt suggest...</span>
+                        <span class="tag">AI prompt suggestio...</span>
+                        <span class="tag">AI prompt suggestions...</span>
+                    </div>
                 </div>
-                <div class="header-actions">
-                    <button class="btn btn-primary" onclick="openBatchModal()">
-                        <i class="fa-solid fa-play"></i> Run 50+ Batch Recovery
-                    </button>
+                <div class="user-profile-controls">
+                    <i class="fa-regular fa-user profile-icon"></i>
+                    <i class="fa-regular fa-bell notification-icon"></i>
+                    <i class="fa-solid fa-gear settings-icon"></i>
                 </div>
             </header>
 
-            <!-- Metrics Panel -->
-            <section class="metrics-grid">
+            <!-- Unified Command Center Cards -->
+            <section class="unified-command-center">
                 <div class="metric-card card-risk">
                     <div class="metric-info">
-                        <span class="metric-label">Revenue at Risk</span>
-                        <h2 class="metric-value" id="val-risk">₹0.00</h2>
-                    </div>
-                    <div class="metric-icon-wrapper">
-                        <i class="fa-solid fa-circle-exclamation text-risk"></i>
+                        <span class="metric-label">Revenue at Risk <span class="badge badge-risk">⚠️ High</span></span>
+                        <h2 class="metric-value" id="val-risk">₹19,09,958.68</h2>
+                        <div class="progress-bar-slider">
+                            <div class="slider-fill fill-risk" style="width: 78%;"></div>
+                            <div class="slider-labels">
+                                <span>Low</span>
+                                <span>High</span>
+                                <span>Risk</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="metric-card card-recovered">
                     <div class="metric-info">
-                        <span class="metric-label">Revenue Recovered</span>
-                        <h2 class="metric-value" id="val-recovered">₹0.00</h2>
-                    </div>
-                    <div class="metric-icon-wrapper">
-                        <i class="fa-solid fa-circle-check text-recovered"></i>
+                        <span class="metric-label">Revenue Recovered <i class="fa-solid fa-arrow-trend-up trend-up"></i></span>
+                        <h2 class="metric-value" id="val-recovered">₹7,94,799.15</h2>
+                        <div class="metric-line-indicator fill-recovered" style="width: 61%;"></div>
                     </div>
                 </div>
 
                 <div class="metric-card card-rate">
                     <div class="metric-info">
-                        <span class="metric-label">Recovery Rate</span>
-                        <h2 class="metric-value" id="val-rate">0.0%</h2>
-                    </div>
-                    <div class="metric-icon-wrapper">
-                        <i class="fa-solid fa-percent text-rate"></i>
+                        <span class="metric-label">Recovery Rate <span class="badge badge-rate">%</span></span>
+                        <h2 class="metric-value" id="val-rate">61.82%</h2>
+                        <div class="metric-line-indicator fill-rate" style="width: 61.82%;"></div>
                     </div>
                 </div>
 
                 <div class="metric-card card-active">
                     <div class="metric-info">
                         <span class="metric-label">Active Dunning</span>
-                        <h2 class="metric-value" id="val-active">0</h2>
-                    </div>
-                    <div class="metric-icon-wrapper">
-                        <i class="fa-solid fa-arrows-spin text-active spinning"></i>
+                        <h2 class="metric-value" id="val-active">13</h2>
+                        <div class="progress-ring-mini">
+                            <svg width="36" height="36">
+                                <circle cx="18" cy="18" r="14" class="ring-bg"></circle>
+                                <circle cx="18" cy="18" r="14" class="ring-fill" stroke-dashoffset="30"></circle>
+                            </svg>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Main Work Split -->
-            <div class="workspace-split">
-                <!-- Left: Pipeline Board -->
-                <section class="pipeline-section">
-                    <div class="section-header">
-                        <h2>Recovery Pipelines</h2>
+            <!-- Split Panel Grid -->
+            <div class="workspace-grid-three">
+                <!-- Column 1: AI Gateway Routing Map -->
+                <div class="grid-col col-noc">
+                    <div class="card-title-header">
+                        <h3>AI Gateway Routing Map <span class="sup-text">[cite: 1]</span></h3>
+                        <span class="sub-header-label">BANK GATEWAYS (NOC)</span>
+                    </div>
+                    
+                    <div class="noc-network-map">
+                        <div class="noc-nodes-column font-nodes">
+                            <div class="node-bank" id="node-hdfc" onclick="toggleGatewayHealth('HDFC')">
+                                <i class="fa-solid fa-building-columns icon-red"></i> HDFC
+                            </div>
+                            <div class="node-bank" id="node-icici" onclick="toggleGatewayHealth('ICICI')">
+                                <i class="fa-solid fa-building-columns icon-red"></i> ICICI
+                            </div>
+                            <div class="node-bank" id="node-sbi" onclick="toggleGatewayHealth('SBI')">
+                                <i class="fa-solid fa-building-columns icon-blue"></i> SBI
+                            </div>
+                            <div class="node-bank" id="node-upi" onclick="toggleGatewayHealth('UPI')">
+                                <i class="fa-solid fa-mobile-screen icon-yellow"></i> UPI
+                            </div>
+                        </div>
+                        
+                        <div class="noc-svg-wires">
+                            <svg id="svg-wires-container" width="100%" height="100%">
+                                <!-- Dynamic wires generated in JS -->
+                            </svg>
+                        </div>
+                        
+                        <div class="noc-status-column font-status">
+                            <div class="health-target"><span class="bullet-green"></span> Stable</div>
+                            <div class="health-target"><span class="bullet-red"></span> Degraded</div>
+                            <div class="health-target"><span class="bullet-orange"></span> Slow/Jitter</div>
+                            <div class="health-target"><span class="bullet-red"></span> Down/STG</div>
+                            <div class="health-target"><span class="bullet-yellow"></span> UPI</div>
+                        </div>
+                    </div>
+
+                    <div class="noc-footer-simulation">
+                        <span>Real-time failure simulation Toggles</span>
+                        <label class="switch">
+                            <input type="checkbox" id="noc-simulation-switch" onchange="toggleAllFailures(this)">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Column 2: Pipelines & Performance Scorecard -->
+                <div class="grid-col col-pipelines">
+                    <div class="pipeline-card-header">
+                        <h3>Recovery Pipelines</h3>
                         <div class="tabs">
                             <button class="tab-btn active" onclick="filterPipeline('ALL')">All Cases</button>
                             <button class="tab-btn" onclick="filterPipeline('payment')">Payments</button>
-                            <button class="tab-btn" onclick="filterPipeline('invoice')">Invoices/Carts</button>
+                            <button class="tab-btn" onclick="filterPipeline('invoice')">Invoices</button>
                             <button class="tab-btn" onclick="filterPipeline('RECOVERED')">Recovered</button>
                         </div>
                     </div>
-                    
-                    <div class="table-container">
-                        <table class="pipeline-table">
+
+                    <div class="pipelines-table-container">
+                        <table class="pipeline-table-v3">
                             <thead>
                                 <tr>
-                                    <th>Customer / ID</th>
-                                    <th>Amount</th>
-                                    <th>Failure Diagnose</th>
-                                    <th>Contacts</th>
-                                    <th>Status Stage</th>
-                                    <th>Actions</th>
+                                    <th>CUSTOMER / ID</th>
+                                    <th>AMOUNT</th>
+                                    <th>FAILURE DIAGNOSE</th>
+                                    <th>CONTACTS</th>
+                                    <th>STATUS STAGE</th>
+                                    <th>POLICY ADHERENCE</th>
                                 </tr>
                             </thead>
                             <tbody id="pipeline-body">
@@ -139,90 +188,71 @@
                             </tbody>
                         </table>
                     </div>
-                </section>
 
-                <!-- Right: Explanable AI Panel & Audit Trail -->
-                <section class="audit-section" id="audit-sidebar">
-                    <div class="audit-placeholder" id="audit-empty-state">
-                        <i class="fa-solid fa-brain-circuit brain-icon"></i>
-                        <h3>AI Agent Reasoning Audit</h3>
-                        <p>Select any transaction or checkout drop-off in the pipeline to audit the LLM's decisions, recovery prompts, and client interactions.</p>
-                    </div>
-
-                    <div class="audit-content-wrapper" id="audit-content" style="display: none;">
-                        <div class="audit-header">
-                            <div class="audit-title-block">
-                                <span class="badge-type" id="audit-type">PAYMENT</span>
-                                <h3 id="audit-entity-id">pay_failed_xxxx</h3>
-                            </div>
-                            <button class="close-audit" onclick="closeAuditPanel()">&times;</button>
+                    <!-- Impact & Performance Scorecard -->
+                    <div class="scorecard-bottom-panel">
+                        <div class="scorecard-header-row">
+                            <h3>Impact & Performance Scorecard</h3>
+                            <span class="days-label">4 virtual days <span class="sup-text">[cite: 1]</span></span>
                         </div>
-
-                        <!-- HITL Action Gating -->
-                        <div class="hitl-gate-panel" id="hitl-actions-container" style="display: none;">
-                            <div class="hitl-warning-header">
-                                <i class="fa-solid fa-triangle-exclamation text-active"></i>
-                                <span>Human Intervention Required</span>
-                            </div>
-                            <div class="hitl-details" id="hitl-actions-message">
-                                Disputed invoice: Reminders paused.
-                            </div>
-                            <div class="hitl-actions">
-                                <button class="btn btn-hitl" id="hitl-btn-resolve" onclick="resolveDisputeAction()"><i class="fa-solid fa-check"></i> Refund & Close</button>
-                                <button class="btn btn-hitl" id="hitl-btn-extend" onclick="extendPromiseAction()"><i class="fa-solid fa-clock"></i> Extend 7 Days</button>
-                            </div>
-                        </div>
-
-                        <!-- Mini Tabs -->
-                        <div class="audit-tabs">
-                            <button class="audit-tab active" onclick="switchAuditTab('logs')">AI Audit Trail</button>
-                            <button class="audit-tab" onclick="switchAuditTab('comms')">Emails / SMS</button>
-                            <button class="audit-tab" id="tab-voice-btn" onclick="switchAuditTab('voice')">Voice Call Log</button>
-                        </div>
-
-                        <!-- Logs Tab Content -->
-                        <div class="audit-tab-panel" id="panel-logs">
-                            <div class="timeline" id="audit-timeline">
-                                <!-- Timelines items go here -->
-                            </div>
-                        </div>
-
-                        <!-- Comms Tab Content -->
-                        <div class="audit-tab-panel" id="panel-comms" style="display: none;">
-                            <div class="inbox-simulator" id="comms-list">
-                                <!-- Inbound/Outbound communications simulated -->
-                            </div>
-                        </div>
-
-                        <!-- Voice Tab Content -->
-                        <div class="audit-tab-panel" id="panel-voice" style="display: none;">
-                            <div class="voice-simulator">
-                                <div class="audio-player">
-                                    <button class="audio-play-btn" id="voice-play-btn" onclick="toggleVoicePlayback()"><i class="fa-solid fa-play"></i></button>
-                                    <div class="audio-wave-container" id="audio-wave">
-                                        <div class="wave-bar"></div>
-                                        <div class="wave-bar"></div>
-                                        <div class="wave-bar"></div>
-                                        <div class="wave-bar"></div>
-                                        <div class="wave-bar"></div>
-                                        <div class="wave-bar"></div>
-                                        <div class="wave-bar"></div>
-                                        <div class="wave-bar"></div>
-                                    </div>
-                                    <span class="audio-timer" id="voice-timer">00:00</span>
+                        <div class="scorecard-metrics-grid">
+                            <div class="compliance-progress-bar">
+                                <span class="compliance-label"><i class="fa-solid fa-user-shield"></i> Agent Compliance <strong>100%</strong></span>
+                                <div class="progress-track">
+                                    <div class="progress-fill fill-green" style="width: 100%;"></div>
                                 </div>
-                                <div class="voice-transcript" id="voice-transcript-text">
-                                    <!-- Script goes here -->
-                                </div>
+                            </div>
+                            <div class="revenue-recovered-badge">
+                                <span class="rev-val"><i class="fa-solid fa-chart-line"></i> Overall Recovered Revenue <strong>₹7.2K</strong></span>
+                            </div>
+                            <div class="scorecard-charts">
+                                <canvas id="scorecardLineChart" width="220" height="70"></canvas>
                             </div>
                         </div>
                     </div>
-                </section>
+                </div>
+
+                <!-- Column 3: Simulation Control & AI Agent Audit -->
+                <div class="grid-col col-audit">
+                    <!-- Simulation Control Card (Top Right) -->
+                    <div class="simulation-control-card">
+                        <h3>Simulation Control</h3>
+                        <div class="simulation-btn-group">
+                            <button class="btn btn-primary btn-step-sim" onclick="stepEntityManual()"><i class="fa-solid fa-play"></i> Run Step-by-Step</button>
+                            <button class="btn btn-secondary btn-full-sim" onclick="openBatchModal()"><i class="fa-solid fa-rocket"></i> Full Batch (50+ records)</button>
+                        </div>
+                        <div class="override-selector-pane">
+                            <label for="override-select">Performance Overrides:</label>
+                            <select id="override-select" onchange="changeOverride(this.value)">
+                                <option value="normal">Normal Execution</option>
+                                <option value="induce_gateway_failure">Induce Gateway Failure</option>
+                                <option value="customer_opt_out">Customer Opt-Out</option>
+                                <option value="dispute_trigger">Dispute Trigger</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Reasoning Audit Accordion -->
+                    <div class="audit-accordion-section">
+                        <div class="card-title-header">
+                            <h3>AI Agent Reasoning Audit <span class="sup-text">[site: 1]</span></h3>
+                        </div>
+
+                        <div class="accordion-container" id="accordion-root">
+                            <!-- Accordion Placeholder -->
+                            <div class="audit-placeholder" id="audit-empty-state">
+                                <i class="fa-solid fa-brain-circuit brain-icon"></i>
+                                <h3>Agent Evaluation Desk</h3>
+                                <p>Select any active case in the pipeline grid to trace the dynamic AI reasoning tree, policy checks, and Hinglish transcripts.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
-    <!-- Batch Simulator Report Modal -->
+    <!-- Batch Simulator Modal -->
     <div class="modal-overlay" id="batch-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -285,9 +315,9 @@
         </div>
     </div>
 
-    <!-- Notification system toast -->
+    <!-- Notification Toast -->
     <div class="toast" id="toast"></div>
 
-    <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
 </body>
 </html>
