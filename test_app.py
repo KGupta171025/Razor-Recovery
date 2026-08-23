@@ -211,5 +211,38 @@ class TestRazorRecovery(unittest.TestCase):
         good_response = client.post("/api/gateway-health/toggle", json={"bank": "HDFC"})
         self.assertEqual(good_response.status_code, 200)
 
+    def test_07_ledger_integrity_checks(self):
+        """Test cryptographic hash chain signature creation and tamper detection."""
+        from fastapi.testclient import TestClient
+        from app.main import app
+        
+        client = TestClient(app)
+        
+        # Reset and seed database (triggers several audit logs with signatures)
+        simulator.seed_synthetic_data(self.db)
+        
+        # 1. Verify ledger integrity (should succeed out-of-the-box)
+        response = client.get("/api/security/verify-ledger")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "secured")
+        self.assertEqual(response.json()["tampered"], False)
+        
+        # 2. Tamper with one audit log record in SQLite directly
+        first_log = self.db.query(AuditLog).first()
+        self.assertIsNotNone(first_log)
+        
+        original_action = first_log.action_taken
+        first_log.action_taken = "Malicious Altered Action Name"
+        self.db.commit()
+        
+        # 3. Verify ledger integrity again (should raise 500 Compromised error)
+        fail_response = client.get("/api/security/verify-ledger")
+        self.assertEqual(fail_response.status_code, 500)
+        self.assertIn("Ledger Integrity Compromised", fail_response.json()["detail"])
+        
+        # Restore database state
+        first_log.action_taken = original_action
+        self.db.commit()
+
 if __name__ == "__main__":
     unittest.main()

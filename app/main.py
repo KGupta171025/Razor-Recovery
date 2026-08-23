@@ -1,6 +1,6 @@
 import os
 from fastapi import FastAPI, Depends, HTTPException, Body, Request
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -50,6 +50,23 @@ async def add_security_headers(request: Request, call_next):
         "connect-src 'self';"
     )
     return response
+
+# Request Payload Size Limit Middleware to prevent DoS (memory exhaustion)
+@app.middleware("http")
+async def limit_payload_size(request: Request, call_next):
+    if request.method in ["POST", "PUT"]:
+        content_length = request.headers.get("content-length")
+        if content_length:
+            try:
+                size_bytes = int(content_length)
+                if size_bytes > 256 * 1024:  # 256 KB Limit
+                    return JSONResponse(
+                        content={"detail": "Payload Too Large (256 KB Limit Exceeded)"},
+                        status_code=413
+                    )
+            except ValueError:
+                pass
+    return await call_next(request)
 
 # Pydantic Schemas for Request Validation
 class GatewayToggleRequest(BaseModel):
@@ -336,6 +353,41 @@ def dispute_action(req: DisputeActionRequest, db: Session = Depends(get_db)):
         return {"status": "success", "message": f"Promise date extended to {new_date.strftime('%Y-%m-%d')}."}
         
     raise HTTPException(status_code=400, detail="Invalid action")
+
+# API: Verify Cryptographic Ledger Integrity
+@app.get("/api/security/verify-ledger")
+def verify_ledger(db: Session = Depends(get_db)):
+    import hashlib
+    logs = db.query(AuditLog).order_by(AuditLog.id.asc()).all()
+    
+    verified_count = 0
+    prev_hash = "GENESIS_HASH"
+    
+    for log in logs:
+        # Re-calculate hash using database properties
+        content_str = (
+            f"{log.entity_type}|{log.entity_id}|{log.stage}|"
+            f"{log.action_taken}|{log.reasoning or ''}|"
+            f"{log.details or ''}|{prev_hash}"
+        )
+        expected_hash = hashlib.sha256(content_str.encode('utf-8')).hexdigest()
+        
+        if log.hash_signature != expected_hash:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Ledger Integrity Compromised! Audit Log ID {log.id} hash signature mismatch. "
+                       f"Expected: {expected_hash}, Actual: {log.hash_signature}"
+            )
+        
+        prev_hash = log.hash_signature
+        verified_count += 1
+        
+    return {
+        "status": "secured",
+        "verified_records_count": verified_count,
+        "tampered": False,
+        "message": "Cryptographic hash chain validated successfully. Audit ledger is intact and untampered."
+    }
 
 # API: Get Hinglish Voice Script
 @app.get("/api/voice-script/{entity_id}")

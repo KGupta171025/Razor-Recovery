@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Float, DateTime, Integer, Boolean, ForeignKey
-from app.database import Base
+import hashlib
+from sqlalchemy import Column, String, Float, DateTime, Integer, Boolean, ForeignKey, event, text
+from app.database import Base, engine
 
 def utc_now():
     return datetime.now(timezone.utc).replace(tzinfo=None)
@@ -48,6 +49,7 @@ class AuditLog(Base):
     action_taken = Column(String, nullable=False) # e.g. "Sent Email", "Silent Retry Scheduled"
     reasoning = Column(String, nullable=True) # LLM Reasoning or rule evaluation
     details = Column(String, nullable=True) # Additional details (e.g. Email body, API response)
+    hash_signature = Column(String, nullable=True) # Cryptographic hash link for tamper-proofing
 
 class Communication(Base):
     __tablename__ = "communications"
@@ -59,3 +61,34 @@ class Communication(Base):
     direction = Column(String, nullable=False) # outbound, inbound
     content = Column(String, nullable=False)
     timestamp = Column(DateTime, default=utc_now)
+
+# Reset signature transaction-local cache whenever a new transaction begins on a connection
+@event.listens_for(engine, "begin")
+def reset_audit_hash_on_begin(conn):
+    conn.info["latest_audit_hash"] = None
+
+# aspect-oriented cryptographic signing hook on AuditLog table insertion
+@event.listens_for(AuditLog, "before_insert")
+def sign_audit_log(mapper, connection, target):
+    # Check if we already have a running chain in the transaction cache
+    prev_hash = connection.info.get("latest_audit_hash")
+    
+    if prev_hash is None:
+        # If cache is empty, query the database directly to fetch the previous record's signature
+        cursor = connection.execute(
+            text("SELECT hash_signature FROM audit_logs ORDER BY id DESC LIMIT 1")
+        )
+        row = cursor.fetchone()
+        prev_hash = row[0] if (row and row[0]) else "GENESIS_HASH"
+    
+    # Calculate SHA-256 over fields + previous signature
+    content_str = (
+        f"{target.entity_type}|{target.entity_id}|{target.stage}|"
+        f"{target.action_taken}|{target.reasoning or ''}|"
+        f"{target.details or ''}|{prev_hash}"
+    )
+    target.hash_signature = hashlib.sha256(content_str.encode('utf-8')).hexdigest()
+    
+    # Update transaction cache for subsequent inserts in this transaction
+    connection.info["latest_audit_hash"] = target.hash_signature
+
