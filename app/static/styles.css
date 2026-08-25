@@ -34,6 +34,14 @@
     padding: 0;
 }
 
+html, body {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE and Edge */
+}
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari, and Opera */
+}
+
 body {
     background-color: var(--bg-dark);
     color: var(--text-main);
