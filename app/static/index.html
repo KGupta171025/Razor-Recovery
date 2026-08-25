@@ -430,7 +430,7 @@
                         <h4 style="font-size: 13px; color: var(--text-main);">Maximum Outreach Attempts</h4>
                         <p style="font-size: 10px; color: var(--text-muted);">Halt collections campaigns if this outreach limit is reached.</p>
                     </div>
-                    <input type="number" id="setting-max-outreach" class="premium-number-input" value="3" min="1" max="10">
+                    <input type="number" id="setting-max-outreach" value="3" min="1" max="10" style="width: 60px; background: #090d16; color: var(--text-main); border: 1px solid var(--card-border); border-radius: 6px; padding: 6px; font-size: 12px; text-align: center; outline: none;">
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 8px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
@@ -449,7 +449,7 @@
                         <h4 style="font-size: 13px; color: var(--text-main);">PII Compliance Strategy</h4>
                         <p style="font-size: 10px; color: var(--text-muted);">Select method of data sanitization for downstream pipelines.</p>
                     </div>
-                    <select id="setting-pii-strategy" class="premium-select">
+                    <select id="setting-pii-strategy">
                         <option value="mask">Standard Masking (A+)</option>
                         <option value="redact">Full Redaction</option>
                         <option value="plain">Plain Text (No Masking)</option>
@@ -461,7 +461,7 @@
                         <h4 style="font-size: 13px; color: var(--text-main);">Auto-backup Interval</h4>
                         <p style="font-size: 10px; color: var(--text-muted);">Trigger automated database backup checkpoints.</p>
                     </div>
-                    <select id="setting-backup-interval" class="premium-select">
+                    <select id="setting-backup-interval">
                         <option value="hourly">Every Hour</option>
                         <option value="daily" selected>Every Day</option>
                         <option value="weekly">Every Week</option>
