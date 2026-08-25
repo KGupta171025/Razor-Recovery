@@ -190,8 +190,8 @@ h1, h2, h3, h4, .logo-title {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    height: 100vh;
-    overflow-y: auto;
+    min-height: 100vh;
+    height: auto;
 }
 
 /* Header Bar & Search */
@@ -429,7 +429,7 @@ h1, h2, h3, h4, .logo-title {
     padding: 20px;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .card-title-header {
@@ -817,17 +817,16 @@ input:checked + .switch-slider:before {
 .audit-accordion-section {
     display: flex;
     flex-direction: column;
-    flex-grow: 3;
-    overflow: hidden;
-    min-height: 400px; /* Expand height for high visibility */
+    flex-grow: 1;
+    height: auto;
+    min-height: 400px;
 }
 
 .accordion-container, #accordion-root {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    overflow-y: auto;
-    flex-grow: 1;
+    height: auto;
     scrollbar-width: none !important;  /* Firefox */
     -ms-overflow-style: none !important;  /* IE and Edge */
 }
