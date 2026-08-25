@@ -72,9 +72,9 @@
                     </div>
                 </div>
                 <div class="user-profile-controls">
-                    <i class="fa-regular fa-user profile-icon"></i>
-                    <i class="fa-regular fa-bell notification-icon"></i>
-                    <i class="fa-solid fa-gear settings-icon"></i>
+                    <i class="fa-regular fa-user profile-icon" onclick="openProfileModal()"></i>
+                    <i class="fa-regular fa-bell notification-icon" onclick="openNotificationsModal()"></i>
+                    <i class="fa-solid fa-gear settings-icon" onclick="openSettingsModal()"></i>
                 </div>
             </header>
 
@@ -341,6 +341,136 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeBatchModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Profile Modal -->
+    <div class="modal-overlay" id="profile-modal">
+        <div class="modal-card" style="max-width: 440px;">
+            <div class="modal-header">
+                <h2>User Profile</h2>
+                <button class="close-modal" onclick="closeProfileModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px; align-items: center; padding-top: 12px;">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary-grad); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 16px var(--primary-glow);">
+                    <i class="fa-solid fa-user-tie" style="font-size: 36px; color: white;"></i>
+                </div>
+                <div style="text-align: center;">
+                    <h3 style="font-size: 18px; color: var(--text-main);">KGupta171025</h3>
+                    <p style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">Senior Full Stack Engineer (Admin)</p>
+                </div>
+                
+                <div style="width: 100%; border-top: 1px solid var(--card-border); padding-top: 16px; margin-top: 8px;">
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <span style="color: var(--text-muted);">Security Level</span>
+                            <span style="color: var(--success); font-weight: 600;"><i class="fa-solid fa-shield-halved"></i> Root Administrator</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <span style="color: var(--text-muted);">PII Compliance</span>
+                            <span style="color: var(--success); font-weight: 600;"><i class="fa-solid fa-lock"></i> Masking Active (A+)</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <span style="color: var(--text-muted);">IP Rate Limiter</span>
+                            <span style="color: var(--text-main); font-weight: 600;">100 requests/min</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 12px; align-items: center;">
+                            <span style="color: var(--text-muted);">System Backup</span>
+                            <button onclick="triggerProfileBackup()" class="btn btn-secondary" style="font-size: 9px; padding: 4px 8px; border-radius: 4px;"><i class="fa-solid fa-cloud-arrow-up"></i> Backup Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding-top: 12px;">
+                <button class="btn btn-secondary" onclick="closeProfileModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div class="modal-overlay" id="notifications-modal">
+        <div class="modal-card" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Notifications Log</h2>
+                <button class="close-modal" onclick="closeNotificationsModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding-top: 12px;">
+                <div id="notifications-list">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+            <div class="modal-footer" style="padding-top: 12px;">
+                <button class="btn btn-secondary" onclick="closeNotificationsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-card" style="max-width: 540px;">
+            <div class="modal-header">
+                <h2>System Preferences</h2>
+                <button class="close-modal" onclick="closeSettingsModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px; padding-top: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    <div>
+                        <h4 style="font-size: 13px; color: var(--text-main);">Automated Recovery Strategy</h4>
+                        <p style="font-size: 10px; color: var(--text-muted);">Enables autonomous dunning sequence routing via AI Agent.</p>
+                    </div>
+                    <label class="switch-toggle">
+                        <input type="checkbox" id="setting-auto-recovery" checked>
+                        <span class="slider-toggle-round"></span>
+                    </label>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    <div>
+                        <h4 style="font-size: 13px; color: var(--text-main);">Maximum Outreach Attempts</h4>
+                        <p style="font-size: 10px; color: var(--text-muted);">Halt collections campaigns if this outreach limit is reached.</p>
+                    </div>
+                    <input type="number" id="setting-max-outreach" value="3" min="1" max="10" style="width: 60px; background: #090d16; color: var(--text-main); border: 1px solid var(--card-border); border-radius: 6px; padding: 6px; font-size: 12px; text-align: center; outline: none;">
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4 style="font-size: 13px; color: var(--text-main);">AI Diagnosis Confidence Threshold</h4>
+                            <p style="font-size: 10px; color: var(--text-muted);">Minimum confidence level required for automatic routing.</p>
+                        </div>
+                        <span id="val-setting-threshold" style="font-size: 12px; font-weight: 600; color: var(--primary);">0.85</span>
+                    </div>
+                    <input type="range" id="setting-threshold" min="0.5" max="1.0" step="0.05" value="0.85" oninput="document.getElementById('val-setting-threshold').innerText=this.value" style="width: 100%; cursor: pointer;">
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    <div>
+                        <h4 style="font-size: 13px; color: var(--text-main);">PII Compliance Strategy</h4>
+                        <p style="font-size: 10px; color: var(--text-muted);">Select method of data sanitization for downstream pipelines.</p>
+                    </div>
+                    <select id="setting-pii-strategy" style="background: #090d16; color: var(--text-main); border: 1px solid var(--card-border); border-radius: 6px; padding: 6px; font-size: 11px; outline: none; cursor: pointer;">
+                        <option value="mask">Standard Masking (A+)</option>
+                        <option value="redact">Full Redaction</option>
+                        <option value="plain">Plain Text (No Masking)</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    <div>
+                        <h4 style="font-size: 13px; color: var(--text-main);">Auto-backup Interval</h4>
+                        <p style="font-size: 10px; color: var(--text-muted);">Trigger automated database backup checkpoints.</p>
+                    </div>
+                    <select id="setting-backup-interval" style="background: #090d16; color: var(--text-main); border: 1px solid var(--card-border); border-radius: 6px; padding: 6px; font-size: 11px; outline: none; cursor: pointer;">
+                        <option value="hourly">Every Hour</option>
+                        <option value="daily" selected>Every Day</option>
+                        <option value="weekly">Every Week</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding-top: 12px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn btn-secondary" onclick="closeSettingsModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveSystemSettings()"><i class="fa-solid fa-circle-check"></i> Save Preferences</button>
             </div>
         </div>
     </div>
