@@ -306,11 +306,9 @@ class TestRazorRecovery(unittest.TestCase):
             self.db.commit()
         self.db.rollback()
 
-        # 4. Test secret panel management redirect gate
-        manage_res = client.get("/api/manage", follow_redirects=False)
-        self.assertEqual(manage_res.status_code, 307)
-        self.assertTrue(manage_res.headers["location"].endswith("/?manage=true"))
-
+        # 4. Test secret panel management endpoint
+        manage_res = client.get("/manage")
+        self.assertEqual(manage_res.status_code, 200)
 
 if __name__ == "__main__":
     unittest.main()

@@ -432,12 +432,6 @@ def get_gateway_health():
     from app.gateway import GATEWAY_HEALTH
     return GATEWAY_HEALTH
 
-# API: Secret Management Panel Redirect Gate
-@app.get("/api/manage")
-def get_secret_manage():
-    from fastapi.responses import RedirectResponse
-    return RedirectResponse(url="/?manage=true")
-
 # API: Toggle Gateway Health
 @app.post("/api/gateway-health/toggle")
 def toggle_gateway_health(req: GatewayToggleRequest):
@@ -877,6 +871,11 @@ def get_ai_recommendation(entity_id: str, db: Session = Depends(get_db)):
 # Serve root dashboard
 @app.get("/", response_class=FileResponse)
 def get_dashboard():
+    return FileResponse("index.html")
+
+# Serve root dashboard for manage route
+@app.get("/manage", response_class=FileResponse)
+def get_manage_dashboard():
     return FileResponse("index.html")
 
 # Mount Static Files

@@ -294,9 +294,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initCanvasBackground();
     loadSystemSettings();
     
-    // URL routing query/hash check to open secret panel directly
-    if (window.location.search.includes('manage=true') || window.location.hash.includes('manage') || window.location.pathname.includes('manage')) {
-        openSecretPanel();
+    // Router support for direct /manage path and redirect hashes
+    if (window.location.hash === '#manage' || window.location.pathname.endsWith('/manage') || window.location.pathname.endsWith('/manage/')) {
+        if (window.location.hash === '#manage') {
+            history.replaceState("", document.title, window.location.pathname + window.location.search);
+        }
+        setTimeout(() => {
+            openSecretPanel();
+        }, 600);
     }
     
     fetchMetrics();
