@@ -763,8 +763,8 @@ input:checked + .switch-slider:before {
     background: rgba(0, 0, 0, 0.15);
     border: 1px solid var(--card-border);
     border-radius: 12px;
-    padding: 14px;
-    margin-bottom: 16px;
+    padding: 10px;
+    margin-bottom: 10px;
 }
 
 .simulation-control-card h3 {
@@ -817,7 +817,7 @@ input:checked + .switch-slider:before {
 .audit-accordion-section {
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
+    flex-grow: 3;
     overflow: hidden;
     min-height: 0;
 }
@@ -828,6 +828,12 @@ input:checked + .switch-slider:before {
     gap: 8px;
     overflow-y: auto;
     flex-grow: 1;
+    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
+}
+
+.accordion-container::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, and Opera */
 }
 
 .accordion-item {
