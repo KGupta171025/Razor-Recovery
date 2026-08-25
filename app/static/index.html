@@ -55,13 +55,14 @@
         <main class="main-content">
             <!-- Header Bar with Global Search -->
             <header class="header-bar">
-                <div class="search-wrapper">
-                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                    <input type="text" placeholder="Global Search..." class="global-search-input">
-                    <div class="suggested-tags">
-                        <span class="tag">AI prompt suggest...</span>
-                        <span class="tag">AI prompt suggestio...</span>
-                        <span class="tag">AI prompt suggestions...</span>
+                <div class="search-wrapper" style="position:relative; flex:1; max-width:650px;">
+                    <i class="fa-solid fa-wand-magic-sparkles search-icon" style="color:var(--accent-glow);"></i>
+                    <input type="text" id="ai-query-input" placeholder="Ask AI Copilot... (e.g. 'failures on HDFC bank' or 'recovered amount above 50000')" class="global-search-input" style="padding-left:35px; width:100%;">
+                    <button id="ai-query-btn" onclick="executeAISearch()" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--accent-glow); border:none; color:white; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:600; transition:all 0.2s;"><i class="fa-solid fa-arrow-right"></i> Run AI</button>
+                    <div class="suggested-tags" style="display:flex; gap:6px; margin-top:4px;">
+                        <span class="tag" style="cursor:pointer;" onclick="suggestAIQuery('failures on HDFC bank')">"failures on HDFC bank"</span>
+                        <span class="tag" style="cursor:pointer;" onclick="suggestAIQuery('recovered amount above 50000')">"recovered amount above 50000"</span>
+                        <span class="tag" style="cursor:pointer;" onclick="suggestAIQuery('overdue invoices with 2 retries')">"overdue invoices with 2 retries"</span>
                     </div>
                 </div>
                 <div class="user-profile-controls">
@@ -237,6 +238,21 @@
                                 <option value="customer_opt_out">Customer Opt-Out</option>
                                 <option value="dispute_trigger">Dispute Trigger</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <!-- AI Copilot Recommendation Card -->
+                    <div class="simulation-control-card copilot-card" id="copilot-card" style="display:none; border:1px solid rgba(59, 130, 246, 0.2); background: linear-gradient(135deg, rgba(30,41,59,0.85) 0%, rgba(15,23,42,0.95) 100%); margin-bottom: 15px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <h3 style="margin:0; display:flex; align-items:center; gap:8px; font-size:13px;"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--accent-glow);"></i> AI Copilot</h3>
+                            <span class="badge badge-risk" id="copilot-badge" style="background:rgba(59, 130, 246, 0.1); border-color:var(--accent-glow); color:var(--text-accent); font-size:10px;">Likelihood: 85%</span>
+                        </div>
+                        <div class="progress-track" style="height:6px; background:#1e293b; border-radius:3px; overflow:hidden; margin-bottom:12px;">
+                            <div class="progress-fill fill-green" id="copilot-bar" style="width: 85%; height:100%; transition: width 0.4s ease;"></div>
+                        </div>
+                        <p id="copilot-text" style="font-size:11px; color:var(--text-muted); line-height:1.4; margin-bottom:12px;">Analyzing transaction context...</p>
+                        <div id="copilot-action-slot" style="margin-top:10px;">
+                            <!-- Populated Dynamically -->
                         </div>
                     </div>
 

@@ -45,6 +45,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Redraw SVG wires on window resize for responsiveness
     window.addEventListener('resize', drawNocWires);
+
+    // AI Command Input key listener
+    const aiInput = document.getElementById('ai-query-input');
+    if (aiInput) {
+        aiInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                executeAISearch();
+            }
+        });
+    }
 });
 
 // Canvas Particle Network Background
@@ -280,9 +290,13 @@ function filterPipeline(filter) {
     fetchPipelines();
 }
 
-// Fetch pipelines cases data
-function fetchPipelines() {
-    fetch('/api/pipelines')
+// Fetch pipelines cases data (supports natural language AI search 'q')
+function fetchPipelines(searchQuery = '') {
+    let url = '/api/pipelines';
+    if (searchQuery && searchQuery.trim() !== '') {
+        url += `?q=${encodeURIComponent(searchQuery)}`;
+    }
+    fetch(url)
         .then(res => res.json())
         .then(data => {
             const tbody = document.getElementById('pipeline-body');
@@ -342,6 +356,106 @@ function selectEntityRow(id, type, rowElement) {
     rowElement.classList.add('active-row');
     
     loadAuditTrail(id);
+    loadAICopilotRecommendation(id);
+}
+
+// Fetch and populate AI Copilot Card
+function loadAICopilotRecommendation(id) {
+    const copilotCard = document.getElementById('copilot-card');
+    const copilotBadge = document.getElementById('copilot-badge');
+    const copilotBar = document.getElementById('copilot-bar');
+    const copilotText = document.getElementById('copilot-text');
+    const actionSlot = document.getElementById('copilot-action-slot');
+    
+    if (!copilotCard) return;
+    
+    fetch(`/api/ai/recommendation/${id}`)
+        .then(res => res.json())
+        .then(data => {
+            copilotBadge.innerText = `Likelihood: ${data.probability}%`;
+            copilotBar.style.width = `${data.probability}%`;
+            
+            // Adjust bar colors based on probability
+            copilotBar.className = 'progress-fill';
+            if (data.probability >= 80) {
+                copilotBar.classList.add('fill-green');
+            } else if (data.probability >= 50) {
+                copilotBar.classList.add('fill-yellow');
+            } else {
+                copilotBar.classList.add('fill-red');
+            }
+            
+            copilotText.innerText = data.reasoning;
+            
+            // Populate Action button
+            actionSlot.innerHTML = '';
+            if (data.recommended_action && data.recommended_action !== 'normal') {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-primary';
+                btn.style.width = '100%';
+                btn.style.fontSize = '11px';
+                btn.style.padding = '6px 12px';
+                btn.style.marginTop = '6px';
+                btn.style.background = 'var(--accent-glow)';
+                btn.style.borderColor = 'var(--accent-glow)';
+                btn.innerHTML = `<i class="fa-solid fa-bolt"></i> Execute: ${escapeHTML(data.action_label)}`;
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    executeCopilotAction(id, data.recommended_action);
+                };
+                actionSlot.appendChild(btn);
+            } else {
+                actionSlot.innerHTML = `<div style="font-size:10px; color:var(--text-dim); text-align:center; padding: 4px 0;"><i class="fa-solid fa-circle-check"></i> Standard automated routing is optimal.</div>`;
+            }
+            
+            copilotCard.style.display = 'block';
+        })
+        .catch(err => {
+            console.error('Error loading AI recommendation:', err);
+            copilotCard.style.display = 'none';
+        });
+}
+
+// Execute AI suggested override actions
+function executeCopilotAction(id, action) {
+    const selector = document.getElementById('override-select');
+    if (selector) {
+        selector.value = action;
+    }
+    changeOverride(action);
+    showToast(`AI Recommendation Executed: ${action.replace('_', ' ').toUpperCase()}`, 'success');
+}
+
+// AI Search Execution
+function executeAISearch() {
+    const input = document.getElementById('ai-query-input');
+    const btn = document.getElementById('ai-query-btn');
+    if (!input || !btn) return;
+    
+    const query = input.value.trim();
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...`;
+    
+    input.style.boxShadow = '0 0 10px rgba(59, 130, 246, 0.4)';
+    
+    fetchPipelines(query);
+    
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-arrow-right"></i> Run AI`;
+        input.style.boxShadow = 'none';
+        if (query !== '') {
+            showToast(`AI query applied: "${query}"`, 'info');
+        }
+    }, 600);
+}
+
+function suggestAIQuery(text) {
+    const input = document.getElementById('ai-query-input');
+    if (input) {
+        input.value = text;
+        executeAISearch();
+    }
 }
 
 // Load collapsible Reasoning Audit Accordion

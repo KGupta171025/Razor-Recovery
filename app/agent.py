@@ -338,3 +338,148 @@ def generate_hinglish_voice_script(entity_details: dict, sequence_number: int) -
         
     return {"transcript": transcript, "suggested_next_step": next_step}
 
+def parse_natural_language_query(user_query: str) -> dict:
+    """Parses natural language user inputs into structured filter criteria using Gemini or regex fallback."""
+    system_instruction = (
+        "You are an AI database query parser for RazorRecovery. "
+        "Translate the user's natural language filter query into structured JSON criteria. "
+        "Fields: "
+        "- bank: 'HDFC', 'ICICI', 'SBI', 'UPI' (exact match, or null) "
+        "- min_amount: float (or null) "
+        "- max_amount: float (or null) "
+        "- stage: 'INGESTED', 'DIAGNOSED', 'CHASING', 'RECOVERED', 'GATED', 'STOPPED' (or null) "
+        "- contact_count: integer (or null) "
+        "- recovery_campaign_status: 'IDLE', 'ACTIVE', 'PAUSED', 'STOPPED_LIMIT', 'STOPPED_OPT_OUT', 'COMPLETED' (or null) "
+        "Return ONLY a JSON block, no markdown, no other keys."
+    )
+    prompt = f"Translate this query: '{user_query}'"
+    
+    if HAS_API_KEY:
+        response_text = call_llm(prompt, system_instruction)
+        if response_text:
+            try:
+                cleaned = response_text.replace("```json", "").replace("```", "").strip()
+                return json.loads(cleaned)
+            except Exception:
+                pass
+                
+    # Fallback regex-based heuristic parser
+    query_lower = user_query.lower()
+    filters = {
+        "bank": None,
+        "min_amount": None,
+        "max_amount": None,
+        "stage": None,
+        "contact_count": None,
+        "recovery_campaign_status": None
+    }
+    
+    # Simple bank matching
+    for b in ["hdfc", "icici", "sbi", "upi"]:
+        if b in query_lower:
+            filters["bank"] = b.upper()
+            
+    # Simple stage matching
+    for s in ["ingested", "diagnosed", "chasing", "recovered", "gated", "stopped"]:
+        if s in query_lower:
+            filters["stage"] = s.upper()
+            
+    # Simple amount matching (above/below)
+    import re
+    amounts = [int(x) for x in re.findall(r'\d+', query_lower)]
+    if amounts:
+        val = amounts[0]
+        if any(k in query_lower for k in ["above", "more than", "greater than", ">", "over", "at least"]):
+            filters["min_amount"] = float(val)
+        elif any(k in query_lower for k in ["below", "less than", "<", "under"]):
+            filters["max_amount"] = float(val)
+        else:
+            if len(amounts) > 1:
+                filters["min_amount"] = float(amounts[0])
+                filters["max_amount"] = float(amounts[1])
+            else:
+                filters["min_amount"] = float(val)
+                
+    if "retry" in query_lower or "contact" in query_lower or "attempt" in query_lower:
+        for x in amounts:
+            if x < 10:
+                filters["contact_count"] = x
+                break
+                
+    if "opt-out" in query_lower or "opt out" in query_lower:
+        filters["recovery_campaign_status"] = "STOPPED_OPT_OUT"
+    elif "pause" in query_lower:
+        filters["recovery_campaign_status"] = "PAUSED"
+    elif "completed" in query_lower or "recovered" in query_lower:
+        filters["recovery_campaign_status"] = "COMPLETED"
+        
+    return filters
+
+def compute_ai_recommendation(entity_id: str, amount: float, bank: str, stage: str, contact_count: int, status: str) -> dict:
+    """Computes dynamic recovery probability index and contextual AI agent action recommendation."""
+    system_instruction = (
+        "You are the AI Recovery Optimizer for RazorRecovery. "
+        "Analyze the case context and generate a JSON object with: "
+        "- probability: integer (0 to 100 representing recovery likelihood) "
+        "- reasoning: string (brief explanation of the score) "
+        "- recommended_action: string (e.g. 'induce_gateway_failure', 'customer_opt_out', 'dispute_trigger', 'normal') "
+        "- action_label: string (short user-friendly button text like 'Reroute to HDFC' or 'Resolve Dispute')"
+    )
+    prompt = f"""
+    Analyze this case:
+    - ID: {entity_id}
+    - Amount: {amount}
+    - Associated Bank: {bank}
+    - Current Stage: {stage}
+    - Contact Count: {contact_count}
+    - Status: {status}
+    """
+    
+    if HAS_API_KEY:
+        response_text = call_llm(prompt, system_instruction)
+        if response_text:
+            try:
+                cleaned = response_text.replace("```json", "").replace("```", "").strip()
+                return json.loads(cleaned)
+            except Exception:
+                pass
+                
+    # Fallback heuristic engine
+    probability = 85
+    reasoning = "Normal transaction health. Standard automated retry sequence is highly recommended."
+    recommended_action = "normal"
+    action_label = "Proceed Sequence"
+    
+    bank_upper = (bank or "").upper()
+    stage_upper = (stage or "").upper()
+    status_upper = (status or "").upper()
+    
+    if status_upper == "FAILED" and stage_upper == "PAUSED":
+        probability = 45
+        reasoning = "Customer raised a billing claim. High chargeback risk. Resolve immediately."
+        recommended_action = "dispute_trigger"
+        action_label = "Refund & Close Case"
+    elif bank_upper in ["HDFC", "SBI", "ICICI"] and stage_upper == "GATED":
+        probability = 60
+        reasoning = f"Active bank gateway downtime detected on {bank_upper}. Switch routing nodes."
+        recommended_action = "induce_gateway_failure"
+        action_label = "Reroute Gateway Node"
+    elif contact_count >= 2:
+        probability = 70
+        reasoning = "Multiple outreach attempts ignored. Settle dispute or mark opt-out."
+        recommended_action = "customer_opt_out"
+        action_label = "Force Cancel Campaign"
+    elif amount > 50000:
+        probability = 92
+        reasoning = "High-value corporate customer. Standard VIP retry sequence bypass active."
+        recommended_action = "normal"
+        action_label = "Proceed VIP Bypass"
+        
+    return {
+        "probability": probability,
+        "reasoning": reasoning,
+        "recommended_action": recommended_action,
+        "action_label": action_label
+    }
+
+

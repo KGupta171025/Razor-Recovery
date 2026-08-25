@@ -147,17 +147,88 @@ def get_metrics(db: Session = Depends(get_db)):
         "simulation_override": gateway.SIMULATION_OVERRIDE
     }
 
-# API: Fetch Pipelines
+# API: Fetch Pipelines (with optional AI Natural Language Search 'q')
 @app.get("/api/pipelines")
-def get_pipelines(db: Session = Depends(get_db)):
-    invoices = db.query(Invoice).all()
-    payments = db.query(Payment).all()
+def get_pipelines(q: str = None, db: Session = Depends(get_db)):
+    invoices_query = db.query(Invoice)
+    payments_query = db.query(Payment)
+    
+    if q and q.strip():
+        from app.agent import parse_natural_language_query
+        filters = parse_natural_language_query(q)
+        
+        # Apply filters
+        # 1. Bank filter (banks only exist on payments)
+        if filters.get("bank"):
+            payments_query = payments_query.filter(Payment.payment_method == filters["bank"].lower())
+            invoices_query = invoices_query.filter(Invoice.id == "none")
+            
+        # 2. Min amount filter
+        if filters.get("min_amount") is not None:
+            invoices_query = invoices_query.filter(Invoice.amount >= filters["min_amount"])
+            payments_query = payments_query.filter(Payment.amount >= filters["min_amount"])
+            
+        # 3. Max amount filter
+        if filters.get("max_amount") is not None:
+            invoices_query = invoices_query.filter(Invoice.amount <= filters["max_amount"])
+            payments_query = payments_query.filter(Payment.amount <= filters["max_amount"])
+            
+        # 4. Contact count / retry count filter
+        if filters.get("contact_count") is not None:
+            invoices_query = invoices_query.filter(Invoice.contact_count == filters["contact_count"])
+            payments_query = payments_query.filter(Payment.retry_count == filters["contact_count"])
+            
+        # 5. Campaign status filter
+        if filters.get("recovery_campaign_status"):
+            invoices_query = invoices_query.filter(Invoice.recovery_campaign_status == filters["recovery_campaign_status"])
+            if filters["recovery_campaign_status"] == "COMPLETED":
+                payments_query = payments_query.filter(Payment.status == "captured")
+            elif filters["recovery_campaign_status"] in ["STOPPED_LIMIT", "STOPPED_OPT_OUT"]:
+                payments_query = payments_query.filter(Payment.retry_count >= 3)
+            else:
+                payments_query = payments_query.filter(Payment.id == "none")
+                
+        # 6. Stage filter
+        if filters.get("stage"):
+            target_stage = filters["stage"].upper()
+            
+            # Map invoice stages
+            if target_stage == "RECOVERED":
+                invoices_query = invoices_query.filter(Invoice.status == "RECOVERED")
+            elif target_stage == "STOPPED":
+                invoices_query = invoices_query.filter(Invoice.recovery_campaign_status.in_(["STOPPED_LIMIT", "STOPPED_OPT_OUT"]))
+            elif target_stage == "DISPUTED":
+                invoices_query = invoices_query.filter(Invoice.recovery_campaign_status == "PAUSED", Invoice.status == "FAILED")
+            elif target_stage == "GATED":
+                invoices_query = invoices_query.filter(Invoice.recovery_campaign_status == "PAUSED", Invoice.status != "FAILED")
+            elif target_stage == "CHASING":
+                invoices_query = invoices_query.filter(Invoice.contact_count > 0, Invoice.status != "RECOVERED")
+            elif target_stage == "DIAGNOSED":
+                invoices_query = invoices_query.filter(Invoice.failure_reason.isnot(None), Invoice.contact_count == 0)
+            elif target_stage == "INGESTED":
+                invoices_query = invoices_query.filter(Invoice.failure_reason.is_(None), Invoice.contact_count == 0)
+                
+            # Map payment stages
+            if target_stage == "RECOVERED":
+                payments_query = payments_query.filter(Payment.status == "captured")
+            elif target_stage == "STOPPED":
+                payments_query = payments_query.filter(Payment.retry_count >= 3)
+            elif target_stage == "CHASING":
+                payments_query = payments_query.filter(Payment.retry_count > 0, Payment.status != "captured")
+            elif target_stage == "DIAGNOSED":
+                payments_query = payments_query.filter(Payment.failure_description.like("%Diagnosed%"), Payment.retry_count == 0)
+            elif target_stage == "INGESTED":
+                payments_query = payments_query.filter(~Payment.failure_description.like("%Diagnosed%"), Payment.retry_count == 0)
+            else:
+                payments_query = payments_query.filter(Payment.id == "none")
+
+    invoices = invoices_query.all()
+    payments = payments_query.all()
     
     # Map to dashboard formats
     pipeline = []
     
     for i in invoices:
-        # Determine visual stage on board
         stage = "INGESTED"
         if i.status == "RECOVERED":
             stage = "RECOVERED"
@@ -192,7 +263,7 @@ def get_pipelines(db: Session = Depends(get_db)):
             stage = "STOPPED"
         elif p.retry_count > 0:
             stage = "CHASING"
-        elif "Diagnosed" in (p.failure_description or ""):
+        elif p.failure_description and "Diagnosed" in p.failure_description:
             stage = "DIAGNOSED"
             
         pipeline.append({
@@ -630,6 +701,64 @@ def render_checkout(entity_id: str, db: Session = Depends(get_db)):
     </html>
     """
     return html_content
+
+# API: Fetch AI Recovery Copilot Recommendation
+@app.get("/api/ai/recommendation/{entity_id}")
+def get_ai_recommendation(entity_id: str, db: Session = Depends(get_db)):
+    from app.agent import compute_ai_recommendation
+    
+    amount = 0.0
+    bank = "UPI"
+    stage = "INGESTED"
+    contact_count = 0
+    status = "created"
+    
+    if "pay_" in entity_id:
+        p = db.query(Payment).filter(Payment.id == entity_id).first()
+        if not p:
+            raise HTTPException(status_code=404, detail="Payment not found")
+        amount = p.amount
+        bank = p.payment_method.upper() if p.payment_method else "UPI"
+        status = p.status
+        contact_count = p.retry_count
+        
+        # Calculate stage
+        stage = "INGESTED"
+        if p.status == "captured":
+            stage = "RECOVERED"
+        elif p.retry_count >= 3:
+            stage = "STOPPED"
+        elif p.retry_count > 0:
+            stage = "CHASING"
+        elif p.failure_description and "Diagnosed" in p.failure_description:
+            stage = "DIAGNOSED"
+            
+    else:
+        i = db.query(Invoice).filter(Invoice.id == entity_id).first()
+        if not i:
+            raise HTTPException(status_code=404, detail="Invoice not found")
+        amount = i.amount
+        bank = "UPI"  # Default for invoices
+        status = i.status
+        contact_count = i.contact_count
+        
+        # Calculate stage
+        stage = "INGESTED"
+        if i.status == "RECOVERED":
+            stage = "RECOVERED"
+        elif i.recovery_campaign_status in ["STOPPED_LIMIT", "STOPPED_OPT_OUT"]:
+            stage = "STOPPED"
+        elif i.recovery_campaign_status == "PAUSED" and i.status == "FAILED":
+            stage = "DISPUTED"
+        elif i.recovery_campaign_status == "PAUSED":
+            stage = "GATED"
+        elif i.contact_count > 0:
+            stage = "CHASING"
+        elif i.failure_reason:
+            stage = "DIAGNOSED"
+            
+    recommendation = compute_ai_recommendation(entity_id, amount, bank, stage, contact_count, status)
+    return recommendation
 
 # Serve root dashboard
 @app.get("/", response_class=FileResponse)

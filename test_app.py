@@ -244,5 +244,28 @@ class TestRazorRecovery(unittest.TestCase):
         first_log.action_taken = original_action
         self.db.commit()
 
+    def test_08_ai_command_center(self):
+        """Test AI Copilot Natural Language query filtering and recovery recommendation route."""
+        from fastapi.testclient import TestClient
+        from app.main import app
+        
+        client = TestClient(app)
+        
+        # 1. Test AI search query endpoint
+        response = client.get("/api/pipelines?q=failures+on+HDFC+bank")
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response.json(), list)
+        
+        # 2. Test AI recommendation for a valid payment
+        payment = self.db.query(Payment).first()
+        if payment:
+            rec_response = client.get(f"/api/ai/recommendation/{payment.id}")
+            self.assertEqual(rec_response.status_code, 200)
+            data = rec_response.json()
+            self.assertIn("probability", data)
+            self.assertIn("reasoning", data)
+            self.assertIn("recommended_action", data)
+            self.assertIn("action_label", data)
+
 if __name__ == "__main__":
     unittest.main()
