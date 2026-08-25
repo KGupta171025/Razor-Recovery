@@ -18,6 +18,270 @@ function escapeHTML(str) {
         .replace(/'/g, '&#39;');
 }
 
+// GitHub Pages Autonomic Client-Side Simulation Sandbox Mode
+const IS_GITHUB_PAGES = window.location.hostname.includes("github.io");
+
+let mockPipelines = [];
+let mockGatewayHealth = { "HDFC": "stable", "ICICI": "stable", "SBI": "stable", "UPI": "stable" };
+let mockOverride = "normal";
+let mockAuditLogs = {};
+
+function initMockDatabase() {
+    mockPipelines = [
+        { id: "pay_failed_1001", type: "payment", name: "Customer (HDFC)", email: "rajesh@example.com", amount: 12500, status: "failed", stage: "INGESTED", contact_count: 0, reason: "Bank gateway response timeout" },
+        { id: "pay_failed_1002", type: "payment", name: "Customer (ICICI)", email: "priya@example.com", amount: 48000, status: "failed", stage: "DIAGNOSED", contact_count: 0, reason: "Incorrect OTP entered by user" },
+        { id: "inv_overdue_1003", type: "invoice", name: "Acme Enterprises", email: "billing@acme.com", amount: 145000, status: "PENDING", stage: "CHASING", contact_count: 1, reason: "B2B Overdue Invoice" },
+        { id: "inv_overdue_1004", type: "invoice", name: "Karan Johar", email: "karan@dharmaprod.com", amount: 89000, status: "PENDING", stage: "GATED", contact_count: 2, reason: "Quiet Hours blackout window" },
+        { id: "pay_failed_1005", type: "payment", name: "Customer (SBI)", email: "sanjay@example.com", amount: 9500, status: "captured", stage: "RECOVERED", contact_count: 1, reason: "Recovered via gateway switch" },
+        { id: "inv_overdue_1006", type: "invoice", name: "Vijay Mallya", email: "vijay@kingfisher.com", amount: 250000, status: "FAILED", stage: "DISPUTED", contact_count: 1, reason: "Buyer raised billing dispute claim" }
+    ];
+    
+    mockPipelines.forEach(item => {
+        mockAuditLogs[item.id] = {
+            entity: item,
+            logs: [
+                { timestamp: new Date(Date.now() - 3600000).toISOString(), stage: "INGESTED", action_taken: "Record Created", reasoning: "System detected payment/invoice event.", details: "" }
+            ],
+            communications: []
+        };
+        
+        if (item.stage !== 'INGESTED') {
+            mockAuditLogs[item.id].logs.push({
+                timestamp: new Date(Date.now() - 1800000).toISOString(),
+                stage: "DIAGNOSED",
+                action_taken: "AI Failure Analysis",
+                reasoning: item.reason,
+                details: ""
+            });
+        }
+        
+        if (item.contact_count > 0) {
+            mockAuditLogs[item.id].logs.push({
+                timestamp: new Date(Date.now() - 900000).toISOString(),
+                stage: "CHASING",
+                action_taken: "Outreach Campaign Triggered",
+                reasoning: `Initiated attempt ${item.contact_count}.`,
+                details: ""
+            });
+            mockAuditLogs[item.id].communications.push({
+                timestamp: new Date(Date.now() - 900000).toISOString(),
+                channel: "email",
+                direction: "outbound",
+                content: `Dear ${item.name}, your checkout for INR ${item.amount} was interrupted. Please retry.`
+            });
+        }
+        
+        if (item.stage === 'DISPUTED') {
+            mockAuditLogs[item.id].communications.push({
+                timestamp: new Date(Date.now() - 300000).toISOString(),
+                channel: "voice",
+                direction: "inbound",
+                content: "AUDIO_CALL_TRANSCRIPT: Urgent call from buyer. I dispute the billing amount of this purchase."
+            });
+        }
+    });
+}
+
+if (IS_GITHUB_PAGES) {
+    initMockDatabase();
+}
+
+function apiFetch(url, options = {}) {
+    if (!IS_GITHUB_PAGES) {
+        return window.fetch(url, options);
+    }
+    
+    const parsedUrl = new URL(url, window.location.origin);
+    const pathname = parsedUrl.pathname;
+    
+    let responseData = {};
+    let statusCode = 200;
+    
+    if (pathname === '/api/metrics') {
+        const atRisk = mockPipelines
+            .filter(item => item.status !== 'captured' && item.status !== 'RECOVERED' && item.status !== 'CANCELLED')
+            .reduce((sum, item) => sum + item.amount, 0);
+        const recovered = mockPipelines
+            .filter(item => item.status === 'captured' || item.status === 'RECOVERED')
+            .reduce((sum, item) => sum + item.amount, 0);
+        const recoveredCount = mockPipelines.filter(item => item.status === 'captured' || item.status === 'RECOVERED').length;
+        
+        responseData = {
+            risk_amount: atRisk,
+            recovered_amount: recovered,
+            recovered_count: recoveredCount,
+            total_cases: mockPipelines.length,
+            stopped_cases: mockPipelines.filter(i => i.stage === 'STOPPED').length,
+            disputed_cases: mockPipelines.filter(i => i.stage === 'DISPUTED').length,
+            simulation_override: mockOverride
+        };
+    }
+    
+    else if (pathname === '/api/gateway-health') {
+        responseData = mockGatewayHealth;
+    }
+    
+    else if (pathname === '/api/gateway-health/toggle') {
+        const body = JSON.parse(options.body || '{}');
+        const bank = body.bank;
+        if (bank && mockGatewayHealth[bank]) {
+            mockGatewayHealth[bank] = mockGatewayHealth[bank] === 'stable' ? 'degraded' : 'stable';
+        }
+        responseData = { status: "success", gateway_health: mockGatewayHealth };
+    }
+    
+    else if (pathname === '/api/simulation/override') {
+        const body = JSON.parse(options.body || '{}');
+        mockOverride = body.override || 'normal';
+        
+        if (mockOverride === "induce_gateway_failure") {
+            Object.keys(mockGatewayHealth).forEach(k => mockGatewayHealth[k] = "degraded");
+        } else if (mockOverride === "normal") {
+            Object.keys(mockGatewayHealth).forEach(k => mockGatewayHealth[k] = "stable");
+        }
+        
+        responseData = { status: "success", override: mockOverride };
+    }
+    
+    else if (pathname === '/api/pipelines') {
+        const q = parsedUrl.searchParams.get('q') || '';
+        let filtered = [...mockPipelines];
+        
+        if (q.trim()) {
+            const q_lower = q.toLowerCase();
+            filtered = filtered.filter(item => {
+                if (q_lower.includes("hdfc") && !item.name.toLowerCase().includes("hdfc")) return false;
+                if (q_lower.includes("icici") && !item.name.toLowerCase().includes("icici")) return false;
+                if (q_lower.includes("sbi") && !item.name.toLowerCase().includes("sbi")) return false;
+                if (q_lower.includes("above") || q_lower.includes("over")) {
+                    const match = q_lower.match(/\d+/);
+                    if (match && item.amount <= parseInt(match[0])) return false;
+                }
+                return true;
+            });
+        }
+        
+        responseData = filtered.map(item => ({
+            id: item.id,
+            type: item.type,
+            customer_name: item.name,
+            amount: item.amount,
+            diagnose: item.reason,
+            contact_count: item.contact_count,
+            stage: item.stage
+        }));
+    }
+    
+    else if (pathname.startsWith('/api/ai/recommendation/')) {
+        const entityId = pathname.split('/').pop();
+        const item = mockPipelines.find(i => i.id === entityId) || {};
+        
+        let probability = 85;
+        let reasoning = "Transaction health is normal. Standard automated retry sequence is highly recommended.";
+        let recommended_action = "normal";
+        let action_label = "Proceed Sequence";
+        
+        if (item.stage === 'DISPUTED') {
+            probability = 45;
+            reasoning = "Customer raised a billing claim. High chargeback risk. Settle dispute or issue refund.";
+            recommended_action = "dispute_trigger";
+            action_label = "Refund & Close Case";
+        } else if (item.stage === 'GATED') {
+            probability = 60;
+            reasoning = "Active bank gateway downtime detected on HDFC. Switch routing nodes.";
+            recommended_action = "induce_gateway_failure";
+            action_label = "Reroute Gateway Node";
+        } else if (item.contact_count >= 2) {
+            probability = 70;
+            reasoning = "Multiple outreach attempts ignored. Settle dispute or mark opt-out.";
+            recommended_action = "customer_opt_out";
+            action_label = "Force Cancel Campaign";
+        }
+        
+        responseData = { probability, reasoning, recommended_action, action_label };
+    }
+    
+    else if (pathname.startsWith('/api/audit/')) {
+        const entityId = pathname.split('/').pop();
+        responseData = mockAuditLogs[entityId] || { logs: [], communications: [], entity: {} };
+    }
+    
+    else if (pathname === '/api/step') {
+        const body = JSON.parse(options.body || '{}');
+        const entityId = body.entity_id;
+        const item = mockPipelines.find(i => i.id === entityId);
+        
+        if (item) {
+            if (item.stage === 'INGESTED') {
+                item.stage = 'DIAGNOSED';
+            } else if (item.stage === 'DIAGNOSED') {
+                item.stage = 'CHASING';
+                item.contact_count = Math.min(3, item.contact_count + 1);
+            } else if (item.stage === 'CHASING') {
+                if (item.contact_count >= 3) {
+                    item.stage = 'STOPPED';
+                    item.status = 'FAILED';
+                } else if (mockOverride === 'customer_opt_out') {
+                    item.stage = 'STOPPED';
+                    item.status = 'FAILED';
+                } else {
+                    item.stage = 'RECOVERED';
+                    item.status = 'captured';
+                }
+            }
+            
+            if (mockAuditLogs[item.id]) {
+                mockAuditLogs[item.id].logs.push({
+                    timestamp: new Date().toISOString(),
+                    stage: item.stage,
+                    action_taken: "Step Campaign Simulated",
+                    reasoning: "Simulating campaign dunning progression inside browser.",
+                    details: ""
+                });
+            }
+        }
+        responseData = { status: "success" };
+    }
+    
+    else if (pathname === '/api/run-batch') {
+        mockPipelines.forEach(item => {
+            if (item.stage !== 'STOPPED' && item.stage !== 'RECOVERED') {
+                item.stage = 'RECOVERED';
+                item.status = 'captured';
+            }
+        });
+        responseData = { status: "success", recovered_count: mockPipelines.length };
+    }
+    
+    else if (pathname === '/api/seed') {
+        initMockDatabase();
+        responseData = { status: "success" };
+    }
+    
+    else if (pathname === '/api/dispute-action') {
+        const body = JSON.parse(options.body || '{}');
+        const entityId = body.entity_id;
+        const action = body.action;
+        const item = mockPipelines.find(i => i.id === entityId);
+        
+        if (item) {
+            if (action === 'REFUND_RESOLVE') {
+                item.stage = 'STOPPED';
+                item.status = 'CANCELLED';
+            } else if (action === 'RESCHEDULE_PROMISE') {
+                item.stage = 'GATED';
+            }
+        }
+        responseData = { status: "success" };
+    }
+    
+    return Promise.resolve({
+        status: statusCode,
+        ok: statusCode >= 200 && statusCode < 300,
+        json: () => Promise.resolve(responseData)
+    });
+}
+
 // Page initialization
 document.addEventListener('DOMContentLoaded', () => {
     initCanvasBackground();
@@ -134,7 +398,7 @@ function initCanvasBackground() {
 
 // Fetch general dashboard metrics
 function fetchMetrics() {
-    fetch('/api/metrics')
+    apiFetch('/api/metrics')
         .then(res => res.json())
         .then(data => {
             document.getElementById('val-risk').innerText = `₹${data.total_at_risk.toLocaleString('en-IN')}`;
@@ -160,7 +424,7 @@ function drawNocWires() {
     const svgRect = svg.getBoundingClientRect();
     if (svgRect.width === 0 || svgRect.height === 0) return;
     
-    fetch('/api/gateway-health')
+    apiFetch('/api/gateway-health')
         .then(res => res.json())
         .then(healthData => {
             const banks = ['HDFC', 'ICICI', 'SBI', 'UPI'];
@@ -227,7 +491,7 @@ function drawNocWires() {
 
 // Toggle Individual Bank Health Status
 function toggleGatewayHealth(bank) {
-    fetch('/api/gateway-health/toggle', {
+    apiFetch('/api/gateway-health/toggle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bank: bank })
@@ -248,7 +512,7 @@ function toggleAllFailures(checkbox) {
 
 // Set Active Simulation Override
 function changeOverride(val) {
-    fetch('/api/simulation/override', {
+    apiFetch('/api/simulation/override', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ override: val })
@@ -296,7 +560,7 @@ function fetchPipelines(searchQuery = '') {
     if (searchQuery && searchQuery.trim() !== '') {
         url += `?q=${encodeURIComponent(searchQuery)}`;
     }
-    fetch(url)
+    apiFetch(url)
         .then(res => res.json())
         .then(data => {
             const tbody = document.getElementById('pipeline-body');
@@ -369,7 +633,7 @@ function loadAICopilotRecommendation(id) {
     
     if (!copilotCard) return;
     
-    fetch(`/api/ai/recommendation/${id}`)
+    apiFetch(`/api/ai/recommendation/${id}`)
         .then(res => res.json())
         .then(data => {
             copilotBadge.innerText = `Likelihood: ${data.probability}%`;
@@ -460,7 +724,7 @@ function suggestAIQuery(text) {
 
 // Load collapsible Reasoning Audit Accordion
 function loadAuditTrail(id) {
-    fetch(`/api/audit/${id}`)
+    apiFetch(`/api/audit/${id}`)
         .then(res => res.json())
         .then(data => {
             const root = document.getElementById('accordion-root');
@@ -611,7 +875,7 @@ function refreshAuditTrail(id) {
     // Avoid redrawing while audio player is playing to prevent waveform interruption
     if (isVoicePlaying) return;
     
-    fetch(`/api/audit/${id}`)
+    apiFetch(`/api/audit/${id}`)
         .then(res => res.json())
         .then(data => {
             const entity = data.entity;
@@ -689,7 +953,7 @@ function stepEntityManual() {
         return;
     }
     
-    fetch('/api/step', {
+    apiFetch('/api/step', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ entity_type: activeEntityType, entity_id: activeEntityId })
@@ -718,7 +982,7 @@ function triggerBatchRecovery() {
     document.getElementById('batch-trigger-view').style.display = 'none';
     document.getElementById('batch-loading-view').style.display = 'block';
     
-    fetch('/api/run-batch', { method: 'POST' })
+    apiFetch('/api/run-batch', { method: 'POST' })
     .then(res => res.json())
     .then(data => {
         document.getElementById('batch-loading-view').style.display = 'none';
@@ -859,7 +1123,7 @@ function drawBatchCharts(recovered, failed, stopped) {
 
 // Reset Database and Seed fresh records
 function triggerSeed() {
-    fetch('/api/seed', { method: 'POST' })
+    apiFetch('/api/seed', { method: 'POST' })
     .then(res => res.json())
     .then(data => {
         showToast('Database reset and seed data loaded successfully.', 'success');
@@ -885,7 +1149,7 @@ function triggerSeed() {
 
 // Resolve Human manual action
 function resolveHitlAction(id, actionType) {
-    fetch('/api/dispute-action', {
+    apiFetch('/api/dispute-action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ entity_id: id, action: actionType })

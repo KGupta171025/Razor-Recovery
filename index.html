@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RazorRecovery AI v2 — Command Center</title>
+    <!-- Google Fonts: Inter & Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Recovery Visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="app/static/styles.css?v=3">
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+    
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <i class="fa-solid fa-wand-magic-sparkles logo-icon"></i>
+                <div class="logo-text">
+                    <span class="logo-title">RazorRecovery</span>
+                    <span class="logo-subtitle">AI v2</span>
+                </div>
+            </div>
+            
+            <nav class="nav-links">
+                <a href="#" class="nav-item active"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+                <a href="#" class="nav-item" onclick="triggerSeed()"><i class="fa-solid fa-rotate-left"></i> Reset & Seed Data</a>
+                <a href="#" class="nav-item" onclick="openBatchModal()"><i class="fa-solid fa-rocket"></i> Run Batch Simulator</a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="sidebar-security-badge">
+                    <i class="fa-solid fa-shield-halved security-icon"></i>
+                    <div class="security-details">
+                        <span class="security-title">NOC Security Policy</span>
+                        <span class="security-grade">Compliance: <strong>A+ / Secure</strong></span>
+                    </div>
+                </div>
+
+                <div class="system-status">
+                    <div class="status-indicator online"></div>
+                    <div class="status-details">
+                        <span class="status-name">Agent Status: Active</span>
+                        <span class="status-mode" id="api-mode">LLM Engine: Ready (Active)</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <!-- Header Bar with Global Search -->
+            <header class="header-bar">
+                <div class="search-wrapper" style="position:relative; flex:1; max-width:650px;">
+                    <i class="fa-solid fa-wand-magic-sparkles search-icon" style="color:var(--accent-glow);"></i>
+                    <input type="text" id="ai-query-input" placeholder="Ask AI Copilot... (e.g. 'failures on HDFC bank' or 'recovered amount above 50000')" class="global-search-input" style="padding-left:35px; width:100%;">
+                    <button id="ai-query-btn" onclick="executeAISearch()" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--accent-glow); border:none; color:white; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:600; transition:all 0.2s;"><i class="fa-solid fa-arrow-right"></i> Run AI</button>
+                    <div class="suggested-tags" style="display:flex; gap:6px; margin-top:4px;">
+                        <span class="tag" style="cursor:pointer;" onclick="suggestAIQuery('failures on HDFC bank')">"failures on HDFC bank"</span>
+                        <span class="tag" style="cursor:pointer;" onclick="suggestAIQuery('recovered amount above 50000')">"recovered amount above 50000"</span>
+                        <span class="tag" style="cursor:pointer;" onclick="suggestAIQuery('overdue invoices with 2 retries')">"overdue invoices with 2 retries"</span>
+                    </div>
+                </div>
+                <div class="user-profile-controls">
+                    <i class="fa-regular fa-user profile-icon"></i>
+                    <i class="fa-regular fa-bell notification-icon"></i>
+                    <i class="fa-solid fa-gear settings-icon"></i>
+                </div>
+            </header>
+
+            <!-- Unified Command Center Cards -->
+            <section class="unified-command-center">
+                <div class="metric-card card-risk">
+                    <div class="metric-info">
+                        <span class="metric-label">Revenue at Risk <span class="badge badge-risk">⚠️ High</span></span>
+                        <h2 class="metric-value" id="val-risk">₹19,09,958.68</h2>
+                        <div class="progress-bar-slider">
+                            <div class="slider-fill fill-risk" style="width: 78%;"></div>
+                            <div class="slider-labels">
+                                <span>Low</span>
+                                <span>High</span>
+                                <span>Risk</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card card-recovered">
+                    <div class="metric-info">
+                        <span class="metric-label">Revenue Recovered <i class="fa-solid fa-arrow-trend-up trend-up"></i></span>
+                        <h2 class="metric-value" id="val-recovered">₹7,94,799.15</h2>
+                        <div class="metric-line-indicator fill-recovered" style="width: 61%;"></div>
+                    </div>
+                </div>
+
+                <div class="metric-card card-rate">
+                    <div class="metric-info">
+                        <span class="metric-label">Recovery Rate <span class="badge badge-rate">%</span></span>
+                        <h2 class="metric-value" id="val-rate">61.82%</h2>
+                        <div class="metric-line-indicator fill-rate" style="width: 61.82%;"></div>
+                    </div>
+                </div>
+
+                <div class="metric-card card-active">
+                    <div class="metric-info">
+                        <span class="metric-label">Active Dunning</span>
+                        <h2 class="metric-value" id="val-active">13</h2>
+                        <div class="progress-ring-mini">
+                            <svg width="36" height="36">
+                                <circle cx="18" cy="18" r="14" class="ring-bg"></circle>
+                                <circle cx="18" cy="18" r="14" class="ring-fill" stroke-dashoffset="30"></circle>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Split Panel Grid -->
+            <div class="workspace-grid-three">
+                <!-- Column 1: AI Gateway Routing Map -->
+                <div class="grid-col col-noc">
+                    <div class="card-title-header">
+                        <h3>AI Gateway Routing Map <span class="sup-text">[cite: 1]</span></h3>
+                        <span class="sub-header-label">BANK GATEWAYS (NOC)</span>
+                    </div>
+                    
+                    <div class="noc-network-map">
+                        <div class="noc-nodes-column font-nodes">
+                            <div class="node-bank" id="node-hdfc" onclick="toggleGatewayHealth('HDFC')">
+                                <i class="fa-solid fa-building-columns icon-red"></i> HDFC
+                            </div>
+                            <div class="node-bank" id="node-icici" onclick="toggleGatewayHealth('ICICI')">
+                                <i class="fa-solid fa-building-columns icon-red"></i> ICICI
+                            </div>
+                            <div class="node-bank" id="node-sbi" onclick="toggleGatewayHealth('SBI')">
+                                <i class="fa-solid fa-building-columns icon-blue"></i> SBI
+                            </div>
+                            <div class="node-bank" id="node-upi" onclick="toggleGatewayHealth('UPI')">
+                                <i class="fa-solid fa-mobile-screen icon-yellow"></i> UPI
+                            </div>
+                        </div>
+                        
+                        <div class="noc-svg-wires">
+                            <svg id="svg-wires-container" width="100%" height="100%">
+                                <!-- Dynamic wires generated in JS -->
+                            </svg>
+                        </div>
+                        
+                        <div class="noc-status-column font-status">
+                            <div class="health-target"><span class="bullet-green"></span> Stable</div>
+                            <div class="health-target"><span class="bullet-red"></span> Degraded</div>
+                            <div class="health-target"><span class="bullet-orange"></span> Slow/Jitter</div>
+                            <div class="health-target"><span class="bullet-red"></span> Down/STG</div>
+                            <div class="health-target"><span class="bullet-yellow"></span> UPI</div>
+                        </div>
+                    </div>
+
+                    <div class="noc-footer-simulation">
+                        <span>Real-time failure simulation Toggles</span>
+                        <label class="switch">
+                            <input type="checkbox" id="noc-simulation-switch" onchange="toggleAllFailures(this)">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Column 2: Pipelines & Performance Scorecard -->
+                <div class="grid-col col-pipelines">
+                    <div class="pipeline-card-header">
+                        <h3>Recovery Pipelines</h3>
+                        <div class="tabs">
+                            <button class="tab-btn active" onclick="filterPipeline('ALL')">All Cases</button>
+                            <button class="tab-btn" onclick="filterPipeline('payment')">Payments</button>
+                            <button class="tab-btn" onclick="filterPipeline('invoice')">Invoices</button>
+                            <button class="tab-btn" onclick="filterPipeline('RECOVERED')">Recovered</button>
+                        </div>
+                    </div>
+
+                    <div class="pipelines-table-container">
+                        <table class="pipeline-table-v3">
+                            <thead>
+                                <tr>
+                                    <th>CUSTOMER / ID</th>
+                                    <th>AMOUNT</th>
+                                    <th>FAILURE DIAGNOSE</th>
+                                    <th>CONTACTS</th>
+                                    <th>STATUS STAGE</th>
+                                    <th>POLICY ADHERENCE</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pipeline-body">
+                                <!-- Appended dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Impact & Performance Scorecard -->
+                    <div class="scorecard-bottom-panel">
+                        <div class="scorecard-header-row">
+                            <h3>Impact & Performance Scorecard</h3>
+                            <span class="days-label">4 virtual days <span class="sup-text">[cite: 1]</span></span>
+                        </div>
+                        <div class="scorecard-metrics-grid">
+                            <div class="compliance-progress-bar">
+                                <span class="compliance-label"><i class="fa-solid fa-user-shield"></i> Agent Compliance <strong>100%</strong></span>
+                                <div class="progress-track">
+                                    <div class="progress-fill fill-green" style="width: 100%;"></div>
+                                </div>
+                            </div>
+                            <div class="revenue-recovered-badge">
+                                <span class="rev-val"><i class="fa-solid fa-chart-line"></i> Overall Recovered Revenue <strong>₹7.2K</strong></span>
+                            </div>
+                            <div class="scorecard-charts">
+                                <canvas id="scorecardLineChart" width="220" height="70"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3: Simulation Control & AI Agent Audit -->
+                <div class="grid-col col-audit">
+                    <!-- Simulation Control Card (Top Right) -->
+                    <div class="simulation-control-card">
+                        <h3>Simulation Control</h3>
+                        <div class="simulation-btn-group">
+                            <button class="btn btn-primary btn-step-sim" onclick="stepEntityManual()"><i class="fa-solid fa-play"></i> Run Step-by-Step</button>
+                            <button class="btn btn-secondary btn-full-sim" onclick="openBatchModal()"><i class="fa-solid fa-rocket"></i> Full Batch (50+ records)</button>
+                        </div>
+                        <div class="override-selector-pane">
+                            <label for="override-select">Performance Overrides:</label>
+                            <select id="override-select" onchange="changeOverride(this.value)">
+                                <option value="normal">Normal Execution</option>
+                                <option value="induce_gateway_failure">Induce Gateway Failure</option>
+                                <option value="customer_opt_out">Customer Opt-Out</option>
+                                <option value="dispute_trigger">Dispute Trigger</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- AI Copilot Recommendation Card -->
+                    <div class="simulation-control-card copilot-card" id="copilot-card" style="display:none; border:1px solid rgba(59, 130, 246, 0.2); background: linear-gradient(135deg, rgba(30,41,59,0.85) 0%, rgba(15,23,42,0.95) 100%); margin-bottom: 15px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <h3 style="margin:0; display:flex; align-items:center; gap:8px; font-size:13px;"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--accent-glow);"></i> AI Copilot</h3>
+                            <span class="badge badge-risk" id="copilot-badge" style="background:rgba(59, 130, 246, 0.1); border-color:var(--accent-glow); color:var(--text-accent); font-size:10px;">Likelihood: 85%</span>
+                        </div>
+                        <div class="progress-track" style="height:6px; background:#1e293b; border-radius:3px; overflow:hidden; margin-bottom:12px;">
+                            <div class="progress-fill fill-green" id="copilot-bar" style="width: 85%; height:100%; transition: width 0.4s ease;"></div>
+                        </div>
+                        <p id="copilot-text" style="font-size:11px; color:var(--text-muted); line-height:1.4; margin-bottom:12px;">Analyzing transaction context...</p>
+                        <div id="copilot-action-slot" style="margin-top:10px;">
+                            <!-- Populated Dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Reasoning Audit Accordion -->
+                    <div class="audit-accordion-section">
+                        <div class="card-title-header">
+                            <h3>AI Agent Reasoning Audit <span class="sup-text">[site: 1]</span></h3>
+                        </div>
+
+                        <div class="accordion-container" id="accordion-root">
+                            <!-- Accordion Placeholder -->
+                            <div class="audit-placeholder" id="audit-empty-state">
+                                <i class="fa-solid fa-brain-circuit brain-icon"></i>
+                                <h3>Agent Evaluation Desk</h3>
+                                <p>Select any active case in the pipeline grid to trace the dynamic AI reasoning tree, policy checks, and Hinglish transcripts.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Batch Simulator Modal -->
+    <div class="modal-overlay" id="batch-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Batch Recovery Simulator (50+ Records)</h2>
+                <button class="close-modal" onclick="closeBatchModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">Simulate processing all failed payments, checkout drop-offs, and overdue invoices through the multi-stage AI Agent. Evaluates recovery rates, stopping compliance, and resolves cash collection loops.</p>
+                
+                <div class="simulation-trigger-pane" id="batch-trigger-view">
+                    <button class="btn btn-primary btn-large" onclick="triggerBatchRecovery()">
+                        <i class="fa-solid fa-play-circle"></i> Start Batch Simulation Run
+                    </button>
+                </div>
+
+                <div class="simulation-loading" id="batch-loading-view" style="display: none;">
+                    <i class="fa-solid fa-circle-notch fa-spin spinner"></i>
+                    <p>Executing agent state machine, parsing customer responses, checking compliance gates...</p>
+                </div>
+
+                <div class="simulation-results" id="batch-results-view" style="display: none;">
+                    <div class="results-grid">
+                        <div class="result-box">
+                            <span class="res-label">Batch Processed</span>
+                            <span class="res-val" id="res-total">55</span>
+                        </div>
+                        <div class="result-box">
+                            <span class="res-label">Successfully Recovered</span>
+                            <span class="res-val text-recovered" id="res-recovered">0</span>
+                        </div>
+                        <div class="result-box">
+                            <span class="res-label">Money Recovered</span>
+                            <span class="res-val text-recovered" id="res-amount">₹0.00</span>
+                        </div>
+                        <div class="result-box text-rate">
+                            <span class="res-label">Agent Success Rate</span>
+                            <span class="res-val" id="res-rate">0.0%</span>
+                        </div>
+                    </div>
+
+                    <div class="results-charts">
+                        <div class="chart-wrapper">
+                            <canvas id="recoveryChart" width="160" height="160"></canvas>
+                        </div>
+                        <div class="chart-wrapper line-chart-wrapper">
+                            <canvas id="timelineChart" width="220" height="160"></canvas>
+                        </div>
+                    </div>
+                    <div class="exception-box">
+                        <h4>Exceptions Unresolved (Manual Escalations)</h4>
+                        <ul class="exception-list" id="res-exceptions">
+                            <!-- List of exceptions -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeBatchModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="app/static/app.js?v=3"></script>
+</body>
+</html>
