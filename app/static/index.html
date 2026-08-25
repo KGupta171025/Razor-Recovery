@@ -55,11 +55,13 @@
         <main class="main-content">
             <!-- Header Bar with Global Search -->
             <header class="header-bar">
-                <div class="search-wrapper" style="position:relative; flex:1; max-width:650px;">
-                    <i class="fa-solid fa-wand-magic-sparkles search-icon" style="color:var(--accent-glow);"></i>
-                    <input type="text" id="ai-query-input" placeholder="Ask AI Copilot... (e.g. 'failures on HDFC bank' or 'recovered amount above 50000')" class="global-search-input" style="padding-left:35px; width:100%;">
-                    <button id="ai-query-btn" onclick="executeAISearch()" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--accent-glow); border:none; color:white; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:600; transition:all 0.2s;"><i class="fa-solid fa-arrow-right"></i> Run AI</button>
-                    <div class="suggested-tags" style="display:flex; gap:6px; margin-top:4px;">
+                <div class="search-container" style="display:flex; flex-direction:column; gap:6px; flex:1; max-width:650px;">
+                    <div class="search-wrapper" style="position:relative; width:100%;">
+                        <i class="fa-solid fa-wand-magic-sparkles search-icon" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--accent-glow);"></i>
+                        <input type="text" id="ai-query-input" placeholder="Ask AI Copilot... (e.g. 'failures on HDFC bank')" class="global-search-input" style="padding-left:36px; padding-right:80px; width:100%; box-sizing:border-box;">
+                        <button id="ai-query-btn" onclick="executeAISearch()" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--accent-glow); border:none; color:white; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:600; transition:all 0.2s;"><i class="fa-solid fa-arrow-right"></i> Run AI</button>
+                    </div>
+                    <div class="suggested-tags" style="display:flex; gap:6px; align-items:center;">
                         <span class="tag" style="cursor:pointer;" onclick="suggestAIQuery('failures on HDFC bank')">"failures on HDFC bank"</span>
                         <span class="tag" style="cursor:pointer;" onclick="suggestAIQuery('recovered amount above 50000')">"recovered amount above 50000"</span>
                         <span class="tag" style="cursor:pointer;" onclick="suggestAIQuery('overdue invoices with 2 retries')">"overdue invoices with 2 retries"</span>

@@ -389,6 +389,8 @@ h1, h2, h3, h4, .logo-title {
 .progress-ring-mini {
     position: absolute;
     right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
     align-items: center;
 }
@@ -816,7 +818,7 @@ input:checked + .switch-slider:before {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
-    overflow-y: auto;
+    overflow: hidden;
     min-height: 0;
 }
 
