@@ -887,15 +887,26 @@ input:checked + .switch-slider:before {
 }
 
 .json-view-block {
-    background: rgba(0, 0, 0, 0.3);
-    padding: 8px;
-    border-radius: 6px;
+    background: #090d16;
+    color: #60a5fa; /* Clear readable bright blue code syntax */
+    padding: 10px;
+    border-radius: 8px;
     font-family: monospace;
-    max-height: 120px;
-    overflow-y: auto;
+    max-height: 250px;
+    overflow: auto;
     white-space: pre;
-    font-size: 10px;
+    font-size: 11px;
     border: 1px solid var(--card-border);
+    margin-top: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    display: block;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+.json-view-block::-webkit-scrollbar {
+    display: none !important;
 }
 
 /* HITL resolution banner inside sidebar */
