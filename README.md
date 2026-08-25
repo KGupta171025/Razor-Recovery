@@ -16,6 +16,7 @@ Razorpay's evaluation rubric prioritizes: **Problem Taste, Build Quality, AI Jud
 | **Failure Recovery** | Integrates defensive rules: smart retry gates (to avoid spamming bank switches), timeout recovery routing, and a clear reporting of unresolved exceptions that are pushed to human operators. |
 | **The Bar (Track 3)** | Enforces **stopping rules** (maximum 3 contacts, immediate opt-out compliance), **compliant escalation** (escalates tone across sequences), **measured batch recovery** (plots ROI across 55-record simulation runs), and a persistent **audit trail**. |
 | **Enterprise Security** | Production-grade protection: strict Pydantic payload models prevent SQL injections/malformed payloads, Content-Security-Policy (CSP) blocks cross-site injections, X-Frame-Options Denies clickjacking, and XSS sanitization (`escapeHTML`) protects the dashboard. |
+| **Intelligent AI Copilot** | Seamless integration of AI at all layers: frontend wand-magic global search bar handles natural language queries parsed on the backend (with smart regex fallbacks) and maps them directly to SQLAlchemy database filters, accompanied by an AI Copilot Recommendation card featuring dynamic recovery likelihood calculations and one-click execution shortcuts. |
 
 ---
 
