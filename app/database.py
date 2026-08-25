@@ -12,6 +12,15 @@ engine = create_engine(
 # Session local factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+from sqlalchemy import event
+
+# Enforce SQLite foreign key constraints
+@event.listens_for(engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
 # Base class for DB models
 Base = declarative_base()
 

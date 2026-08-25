@@ -1294,3 +1294,107 @@ input:checked + .switch-slider:before {
 .security-grade strong {
     color: var(--success);
 }
+
+/* ========================================== */
+/* Premium Enterprise Button & UI Design System */
+/* ========================================== */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    user-select: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn:active {
+    transform: scale(0.96);
+}
+
+.btn-primary {
+    background: var(--primary-grad);
+    color: #ffffff;
+    border: 1px solid var(--primary);
+    box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.btn-primary:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-main);
+    border: 1px solid var(--card-border);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.btn-large {
+    padding: 10px 20px;
+    font-size: 12px;
+    border-radius: 8px;
+}
+
+/* Glassmorphism sidebar & cards enhancement */
+.sidebar {
+    background: rgba(15, 23, 42, 0.8) !important;
+    backdrop-filter: blur(20px);
+    border-right: 1px solid var(--card-border);
+}
+
+.grid-col {
+    background: rgba(15, 23, 42, 0.45) !important;
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    transition: box-shadow 0.3s ease;
+}
+
+.grid-col:hover {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.05);
+}
+
+/* Tooltip implementation */
+.health-target {
+    position: relative;
+    cursor: help;
+}
+
+.health-target::after {
+    content: "Dunning Routing Health Node";
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 8px;
+    white-space: nowrap;
+    border: 1px solid var(--card-border);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+.health-target:hover::after {
+    opacity: 1;
+}

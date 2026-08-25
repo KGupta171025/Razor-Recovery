@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 import hashlib
-from sqlalchemy import Column, String, Float, DateTime, Integer, Boolean, ForeignKey, event, text
+from sqlalchemy import Column, String, Float, DateTime, Integer, Boolean, ForeignKey, event, text, CheckConstraint
 from app.database import Base, engine
 
 def utc_now():
@@ -8,6 +8,7 @@ def utc_now():
 
 class Invoice(Base):
     __tablename__ = "invoices"
+    __table_args__ = (CheckConstraint('amount >= 0', name='check_invoice_amount_positive'),)
 
     id = Column(String, primary_key=True, index=True) # e.g. inv_12345
     customer_name = Column(String, nullable=False)
@@ -25,6 +26,7 @@ class Invoice(Base):
 
 class Payment(Base):
     __tablename__ = "payments"
+    __table_args__ = (CheckConstraint('amount >= 0', name='check_payment_amount_positive'),)
 
     id = Column(String, primary_key=True, index=True) # e.g. pay_12345
     invoice_id = Column(String, ForeignKey("invoices.id"), nullable=True)

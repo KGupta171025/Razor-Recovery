@@ -9,7 +9,8 @@ class TestRazorRecovery(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        # Initialize database tables
+        # Force database schema drop to compile new CheckConstraints
+        Base.metadata.drop_all(bind=engine)
         init_db()
         cls.db = SessionLocal()
         
@@ -18,9 +19,9 @@ class TestRazorRecovery(unittest.TestCase):
         cls.db.close()
         engine.dispose()
         # Clean up database file after test
-        if os.path.exists("./razorrecovery.db"):
+        if os.path.exists("./razorrecovery_backup.db"):
             try:
-                pass # Keep it for local running or clean it up if desired
+                os.remove("./razorrecovery_backup.db")
             except Exception:
                 pass
 
@@ -266,6 +267,44 @@ class TestRazorRecovery(unittest.TestCase):
             self.assertIn("reasoning", data)
             self.assertIn("recommended_action", data)
             self.assertIn("action_label", data)
+
+    def test_09_enterprise_integrity(self):
+        """Test database CheckConstraints, automated backup endpoint, and GDPR PII masking."""
+        from fastapi.testclient import TestClient
+        from app.main import app
+        from app.models import Invoice
+        from datetime import datetime, timedelta
+        
+        client = TestClient(app)
+        
+        # 1. Test database backup endpoint
+        backup_res = client.post("/api/security/backup")
+        self.assertEqual(backup_res.status_code, 200)
+        self.assertEqual(backup_res.json()["status"], "success")
+        self.assertTrue(os.path.exists("./razorrecovery_backup.db"))
+        
+        # 2. Test PII masking in pipelines response
+        pipelines_res = client.get("/api/pipelines")
+        self.assertEqual(pipelines_res.status_code, 200)
+        for item in pipelines_res.json():
+            if item["type"] == "invoice":
+                # Masked emails should contain asterisks
+                self.assertIn("*", item["email"])
+                self.assertIn("*", item["name"])
+                
+        # 3. Test CheckConstraint (amount >= 0)
+        bad_invoice = Invoice(
+            id="inv_bad_amount",
+            customer_name="Bad Guy",
+            customer_email="bad@guy.com",
+            customer_phone="123456",
+            amount=-100.0,  # Violates CheckConstraint!
+            due_at=datetime.utcnow() + timedelta(days=1)
+        )
+        self.db.add(bad_invoice)
+        with self.assertRaises(Exception):
+            self.db.commit()
+        self.db.rollback()
 
 if __name__ == "__main__":
     unittest.main()

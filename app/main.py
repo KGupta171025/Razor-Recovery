@@ -13,6 +13,29 @@ from app.database import get_db, init_db
 from app.models import Invoice, Payment, AuditLog, Communication
 import app.simulator as simulator
 
+def mask_name(name: str) -> str:
+    if not name or len(name) <= 2:
+        return name
+    return f"{name[0]}{'*' * (len(name) - 2)}{name[-1]}"
+    
+def mask_email(email: str) -> str:
+    if not email or "@" not in email:
+        return email
+    parts = email.split("@")
+    name = parts[0]
+    domain = parts[1]
+    if len(name) <= 2:
+        return f"{name[0]}*@{domain}"
+    return f"{name[0]}{'*' * (len(name) - 2)}{name[-1]}@{domain}"
+
+def mask_phone(phone: str) -> str:
+    if not phone:
+        return phone
+    clean = phone.strip()
+    if len(clean) <= 4:
+        return "*" * len(clean)
+    return f"{'*' * (len(clean) - 4)}{clean[-4:]}"
+
 # Modern Lifespan Handler for Startup/Shutdown Events
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -66,6 +89,34 @@ async def limit_payload_size(request: Request, call_next):
                     )
             except ValueError:
                 pass
+    return await call_next(request)
+
+# Sliding-Window Rate Limiting Middleware to prevent DoS (max 100 requests per minute)
+rate_limit_records = {}
+
+@app.middleware("http")
+async def rate_limiting_middleware(request: Request, call_next):
+    # Allow static files and checkout view without rate-limiting to prevent asset blockages
+    if request.method == "GET" and (request.url.path.startswith("/app/static") or request.url.path.startswith("/checkout") or request.url.path == "/"):
+        return await call_next(request)
+        
+    client_ip = request.client.host if request.client else "unknown-ip"
+    now = datetime.now(timezone.utc).timestamp()
+    
+    if client_ip not in rate_limit_records:
+        rate_limit_records[client_ip] = []
+        
+    timestamps = rate_limit_records[client_ip]
+    # Prune records older than 60 seconds
+    rate_limit_records[client_ip] = [t for t in timestamps if now - t < 60]
+    
+    if len(rate_limit_records[client_ip]) >= 100:
+        return JSONResponse(
+            content={"detail": "Too Many Requests. Please wait before retrying."},
+            status_code=429
+        )
+        
+    rate_limit_records[client_ip].append(now)
     return await call_next(request)
 
 # Pydantic Schemas for Request Validation
@@ -246,8 +297,8 @@ def get_pipelines(q: str = None, db: Session = Depends(get_db)):
         pipeline.append({
             "id": i.id,
             "type": "invoice",
-            "name": i.customer_name,
-            "email": i.customer_email,
+            "name": mask_name(i.customer_name),
+            "email": mask_email(i.customer_email),
             "amount": i.amount,
             "status": i.status,
             "stage": stage,
@@ -270,7 +321,7 @@ def get_pipelines(q: str = None, db: Session = Depends(get_db)):
             "id": p.id,
             "type": "payment",
             "name": f"Customer ({p.payment_method.upper()})",
-            "email": "customer@example.com",
+            "email": "cust****@example.com",
             "amount": p.amount,
             "status": p.status,
             "stage": stage,
@@ -281,11 +332,40 @@ def get_pipelines(q: str = None, db: Session = Depends(get_db)):
     return pipeline
 
 # API: Audit Trail
+@app.get("/api/audit/{entity_id}")
 @app.get("/api/audit-trail/{entity_id}")
 def get_audit_trail(entity_id: str, db: Session = Depends(get_db)):
     logs = db.query(AuditLog).filter(AuditLog.entity_id == entity_id).order_by(AuditLog.timestamp.asc()).all()
     comms = db.query(Communication).filter(Communication.entity_id == entity_id).order_by(Communication.timestamp.asc()).all()
     
+    entity_data = {}
+    if "pay_" in entity_id:
+        p = db.query(Payment).filter(Payment.id == entity_id).first()
+        if p:
+            entity_data = {
+                "id": p.id,
+                "type": "payment",
+                "name": f"Customer ({p.payment_method.upper()})",
+                "email": "customer@example.com",
+                "amount": p.amount,
+                "status": p.status,
+                "retry_count": p.retry_count
+            }
+    else:
+        i = db.query(Invoice).filter(Invoice.id == entity_id).first()
+        if i:
+            entity_data = {
+                "id": i.id,
+                "type": "invoice",
+                "name": mask_name(i.customer_name),
+                "email": mask_email(i.customer_email),
+                "phone": mask_phone(i.customer_phone),
+                "amount": i.amount,
+                "status": i.status,
+                "recovery_campaign_status": i.recovery_campaign_status,
+                "contact_count": i.contact_count
+            }
+            
     logs_json = []
     for l in logs:
         logs_json.append({
@@ -305,7 +385,7 @@ def get_audit_trail(entity_id: str, db: Session = Depends(get_db)):
             "content": c.content
         })
         
-    return {"logs": logs_json, "communications": comms_json}
+    return {"logs": logs_json, "communications": comms_json, "entity": entity_data}
 
 # API: Manual / Checkout Mock Payment Success
 @app.post("/api/pay-mock")
@@ -459,6 +539,34 @@ def verify_ledger(db: Session = Depends(get_db)):
         "tampered": False,
         "message": "Cryptographic hash chain validated successfully. Audit ledger is intact and untampered."
     }
+
+# API: Backup database snapshot (for redundancy)
+@app.post("/api/security/backup")
+def backup_database(db: Session = Depends(get_db)):
+    import shutil
+    source_file = "./razorrecovery.db"
+    backup_file = "./razorrecovery_backup.db"
+    
+    if not os.path.exists(source_file):
+        raise HTTPException(status_code=404, detail="Database file not found.")
+        
+    try:
+        # Flush transaction journals to assure consistency before copy (if supported and not inside a locked txn)
+        try:
+            db.execute(text("PRAGMA wal_checkpoint(TRUNCATE)"))
+        except Exception:
+            pass
+        shutil.copy2(source_file, backup_file)
+        return {
+            "status": "success",
+            "backup_target": backup_file,
+            "message": "Database backup snapshot generated successfully."
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database backup failed: {str(e)}"
+        )
 
 # API: Get Hinglish Voice Script
 @app.get("/api/voice-script/{entity_id}")
@@ -763,7 +871,7 @@ def get_ai_recommendation(entity_id: str, db: Session = Depends(get_db)):
 # Serve root dashboard
 @app.get("/", response_class=FileResponse)
 def get_dashboard():
-    return FileResponse("app/static/index.html")
+    return FileResponse("index.html")
 
 # Mount Static Files
-app.mount("/", StaticFiles(directory="app/static"), name="static")
+app.mount("/app/static", StaticFiles(directory="app/static"), name="static")
