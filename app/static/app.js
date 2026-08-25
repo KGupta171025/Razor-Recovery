@@ -293,6 +293,12 @@ function apiFetch(url, options = {}) {
 document.addEventListener('DOMContentLoaded', () => {
     initCanvasBackground();
     loadSystemSettings();
+    
+    // URL routing query/hash check to open secret panel directly
+    if (window.location.search.includes('manage=true') || window.location.hash.includes('manage') || window.location.pathname.includes('manage')) {
+        openSecretPanel();
+    }
+    
     fetchMetrics();
     fetchPipelines();
     initScorecardChart();
