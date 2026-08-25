@@ -19,7 +19,7 @@
     <div class="dashboard-container">
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
-            <div class="logo-area">
+            <div class="logo-area" ondblclick="openSecretPanel()" style="cursor: pointer; user-select: none;">
                 <svg class="logo-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:24px; height:24px; filter:drop-shadow(0 0 8px rgba(51, 149, 255, 0.4)); margin-right:4px;">
                     <path d="M14.26 10.098L3.389 17.166 1.564 24h9.008l3.688-13.902Z" fill="#2d3d54" />
                     <path d="M22.436 0l-11.91 7.773-1.174 4.276 6.625-4.297L11.65 24h4.391l6.395-24z" fill="#3395ff" />
@@ -471,6 +471,115 @@
             <div class="modal-footer" style="padding-top: 12px; display: flex; justify-content: flex-end; gap: 10px;">
                 <button class="btn btn-secondary" onclick="closeSettingsModal()">Cancel</button>
                 <button class="btn btn-primary" onclick="saveSystemSettings()"><i class="fa-solid fa-circle-check"></i> Save Preferences</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secret Admin Panel Modal -->
+    <div class="modal-overlay" id="secret-admin-modal">
+        <!-- View 1: Auth Screen -->
+        <div class="modal-card terminal-modal-card" id="secret-auth-card" style="max-width: 400px; display: block;">
+            <div class="terminal-header">
+                <h2>[ROOT SECURITY GATE]</h2>
+                <button class="terminal-close" onclick="closeSecretPanel()">&times;</button>
+            </div>
+            <div class="terminal-body" style="display: flex; flex-direction: column; gap: 14px;">
+                <p style="color: #00ff66; font-size: 11px; margin-bottom: 8px;">UNAUTHORIZED ACCESS DETECTED. PROVIDE SECURITY CREDENTIALS TO INITIALIZE SYSTEM PANEL.</p>
+                <div>
+                    <label>Admin Identity</label>
+                    <input type="text" id="secret-id-input" class="terminal-input" placeholder="root_uid" autocomplete="off">
+                </div>
+                <div>
+                    <label>Security Key</label>
+                    <input type="password" id="secret-pass-input" class="terminal-input" placeholder="**********">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                    <button class="terminal-btn" onclick="closeSecretPanel()">Abort</button>
+                    <button class="terminal-btn" onclick="authenticateSecretGate()">Verify</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 2: Terminal Console -->
+        <div class="modal-card terminal-modal-card" id="secret-console-card" style="max-width: 600px; display: none;">
+            <div class="terminal-header">
+                <h2>[ROOT@RAZORRECOVERY:~] # SYSTEM CONTROL PANEL</h2>
+                <button class="terminal-close" onclick="closeSecretPanel()">&times;</button>
+            </div>
+            <div class="terminal-body">
+                <div class="terminal-grid">
+                    <!-- Column A: Gateway Overrides -->
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <h4 style="color: #00ff66; font-size: 12px; margin-bottom: 6px; border-bottom: 1px solid rgba(0,255,102,0.2); padding-bottom: 4px;">Gateway Status Overrides</h4>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                            <span>HDFC NODE</span>
+                            <select id="secret-override-hdfc" class="terminal-select" style="width: 110px;" onchange="applySecretGatewayOverride('HDFC', this.value)">
+                                <option value="stable">Stable</option>
+                                <option value="degraded">Degraded</option>
+                                <option value="jitter">Jitter</option>
+                                <option value="down">Down</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                            <span>ICICI NODE</span>
+                            <select id="secret-override-icici" class="terminal-select" style="width: 110px;" onchange="applySecretGatewayOverride('ICICI', this.value)">
+                                <option value="stable">Stable</option>
+                                <option value="degraded">Degraded</option>
+                                <option value="jitter">Jitter</option>
+                                <option value="down">Down</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                            <span>SBI NODE</span>
+                            <select id="secret-override-sbi" class="terminal-select" style="width: 110px;" onchange="applySecretGatewayOverride('SBI', this.value)">
+                                <option value="stable">Stable</option>
+                                <option value="degraded">Degraded</option>
+                                <option value="jitter">Jitter</option>
+                                <option value="down">Down</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
+                            <span>UPI NODE</span>
+                            <select id="secret-override-upi" class="terminal-select" style="width: 110px;" onchange="applySecretGatewayOverride('UPI', this.value)">
+                                <option value="stable">Stable</option>
+                                <option value="degraded">Degraded</option>
+                                <option value="jitter">Jitter</option>
+                                <option value="down">Down</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Column B: Pipeline Manual Injection -->
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <h4 style="color: #00ff66; font-size: 12px; margin-bottom: 6px; border-bottom: 1px solid rgba(0,255,102,0.2); padding-bottom: 4px;">Inject Mock Outage Case</h4>
+                        <div>
+                            <input type="text" id="secret-inject-name" class="terminal-input" placeholder="Customer Name" style="padding: 6px; font-size: 11px; margin-bottom: 6px;">
+                            <input type="text" id="secret-inject-email" class="terminal-input" placeholder="email@example.com" style="padding: 6px; font-size: 11px; margin-bottom: 6px;">
+                            <input type="number" id="secret-inject-amount" class="terminal-input" placeholder="Amount (INR)" style="padding: 6px; font-size: 11px; margin-bottom: 6px;">
+                            <select id="secret-inject-bank" class="terminal-select" style="padding: 6px; font-size: 11px; margin-bottom: 6px;">
+                                <option value="HDFC">HDFC Bank</option>
+                                <option value="ICICI">ICICI Bank</option>
+                                <option value="SBI">State Bank of India</option>
+                                <option value="UPI">UPI Gateway</option>
+                            </select>
+                            <button class="terminal-btn" style="width: 100%; font-size: 10px; padding: 6px;" onclick="triggerSecretCaseInjection()"><i class="fa-solid fa-bolt"></i> Force Inject Failure</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section C: Terminal Output Logs & PII Decryptor -->
+                <h4 style="color: #00ff66; font-size: 12px; margin-bottom: 6px; border-bottom: 1px solid rgba(0,255,102,0.2); padding-bottom: 4px;">Console Logs</h4>
+                <div class="terminal-log-pane" id="secret-terminal-logs">root_session_initialized: routing mapping tables linked.
+awaiting instructions...</div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(0,255,102,0.2); padding-top: 12px; margin-top: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 11px; font-weight: bold; color: #00ff66;">PII DECRYPTOR VIEWPORT</span>
+                        <span id="decryption-status-badge" style="font-size: 10px;">[INACTIVE]</span>
+                    </div>
+                    <button class="terminal-btn" style="padding: 6px 12px; font-size: 10px;" id="btn-toggle-decryption" onclick="toggleSecretPIIDecryption()">Decrypt PII Stream</button>
+                </div>
             </div>
         </div>
     </div>

@@ -599,9 +599,12 @@ function fetchPipelines(searchQuery = '') {
                     ? `<span class="compliance-badge-check"><i class="fa-solid fa-check"></i></span>`
                     : `<span class="compliance-badge-fail"><i class="fa-solid fa-triangle-exclamation"></i></span>`;
 
+                const isAlreadyMasked = item.customer_name.includes('*');
+                const displayName = (isPIIDecrypted || isAlreadyMasked) ? item.customer_name : maskName(item.customer_name);
+
                 tr.innerHTML = `
                     <td>
-                        <strong style="display:block;">${escapeHTML(item.customer_name)}</strong>
+                        <strong style="display:block;">${escapeHTML(displayName)}</strong>
                         <span style="font-size:10px; color:var(--text-dim);">${escapeHTML(item.id)}</span>
                     </td>
                     <td>₹${item.amount.toLocaleString('en-IN')}</td>
@@ -745,9 +748,14 @@ function loadAuditTrail(id) {
             // Build Collapsible Steps
             
             // 1. Data Input Step
+            let displayEntity = {...entity};
+            if (!isPIIDecrypted) {
+                if (displayEntity.name) displayEntity.name = maskName(displayEntity.name);
+                if (displayEntity.email) displayEntity.email = maskEmail(displayEntity.email);
+            }
             createAccordionItem(root, 'Data Input', `
                 <div class="step-summary">Raw Ingested Transaction Payload</div>
-                <div class="json-view-block">${JSON.stringify(entity, null, 2)}</div>
+                <div class="json-view-block">${JSON.stringify(displayEntity, null, 2)}</div>
             `);
             
             // 2. Policy Check Step
@@ -776,9 +784,15 @@ Outcome: Trigger collection campaign.</div>
                     const dirIcon = c.direction === 'outbound' ? 'fa-paper-plane' : 'fa-reply';
                     const titleText = c.direction === 'outbound' ? 'Outbound Alert' : 'Customer Response';
                     
+                    let rawContent = c.content;
+                    if (!isPIIDecrypted) {
+                        if (entity.email) rawContent = rawContent.replaceAll(entity.email, maskEmail(entity.email));
+                        if (entity.name) rawContent = rawContent.replaceAll(entity.name, maskName(entity.name));
+                    }
+                    
                     // Voice Call script parser
-                    if (c.content.includes("AUDIO_CALL_TRANSCRIPT:")) {
-                        const cleanScript = c.content.replace("AUDIO_CALL_TRANSCRIPT:", "");
+                    if (rawContent.includes("AUDIO_CALL_TRANSCRIPT:")) {
+                        const cleanScript = rawContent.replace("AUDIO_CALL_TRANSCRIPT:", "");
                         
                         // Parse emotion and tags
                         let emotionClass = 'emotion-friendly';
@@ -824,7 +838,7 @@ Outcome: Trigger collection campaign.</div>
                                     <span><i class="fa-solid ${dirIcon}"></i> ${escapeHTML(titleText)} (${escapeHTML(c.channel)})</span>
                                     <span>${escapeHTML(new Date(c.timestamp).toLocaleTimeString())}</span>
                                 </div>
-                                <div class="comm-body" style="font-size:11px; white-space:pre-line;">${escapeHTML(c.content)}</div>
+                                <div class="comm-body" style="font-size:11px; white-space:pre-line;">${escapeHTML(rawContent)}</div>
                             </div>
                         `;
                     }
@@ -1365,5 +1379,188 @@ function loadSystemSettings() {
         document.getElementById('setting-backup-interval').value = settings.backupInt;
     } catch(e) {
         console.error('Failed to load local preferences:', e);
+    }
+}
+
+// PII Masking/Unmasking Helper Drivers
+let isPIIDecrypted = false;
+
+function maskName(name) {
+    if (!name) return "";
+    const parts = name.split(" ");
+    return parts.map(part => {
+        if (part.length <= 2) return part;
+        return part[0] + "*".repeat(part.length - 2) + part[part.length - 1];
+    }).join(" ");
+}
+
+function maskEmail(email) {
+    if (!email) return "";
+    const parts = email.split("@");
+    if (parts.length !== 2) return email;
+    const name = parts[0];
+    const domain = parts[1];
+    if (name.length <= 2) return `**@${domain}`;
+    return name[0] + "*".repeat(name.length - 2) + name[name.length - 1] + "@" + domain;
+}
+
+// Secret Panel Authentication & Control Room
+let secretKeyBuffer = [];
+const secretPhrase = "secret";
+
+document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+    
+    secretKeyBuffer.push(e.key.toLowerCase());
+    if (secretKeyBuffer.length > secretPhrase.length) {
+        secretKeyBuffer.shift();
+    }
+    
+    if (secretKeyBuffer.join('') === secretPhrase) {
+        secretKeyBuffer = [];
+        openSecretPanel();
+    }
+});
+
+function openSecretPanel() {
+    document.getElementById('secret-id-input').value = '';
+    document.getElementById('secret-pass-input').value = '';
+    document.getElementById('secret-auth-card').style.display = 'block';
+    document.getElementById('secret-console-card').style.display = 'none';
+    
+    document.getElementById('secret-override-hdfc').value = mockGatewayHealth['HDFC'] || 'stable';
+    document.getElementById('secret-override-icici').value = mockGatewayHealth['ICICI'] || 'stable';
+    document.getElementById('secret-override-sbi').value = mockGatewayHealth['SBI'] || 'stable';
+    document.getElementById('secret-override-upi').value = mockGatewayHealth['UPI'] || 'stable';
+    
+    document.getElementById('secret-admin-modal').classList.add('open');
+}
+
+function closeSecretPanel() {
+    document.getElementById('secret-admin-modal').classList.remove('open');
+}
+
+function authenticateSecretGate() {
+    const id = document.getElementById('secret-id-input').value;
+    const pass = document.getElementById('secret-pass-input').value;
+    
+    // Obscured via Base64 (RazorPay / RazorPay-Password)
+    if (btoa(id) === "UmF6b3JQYXk=" && btoa(pass) === "UmF6b3JQYXktUGFzc3dvcmQ=") {
+        showToast('Access Granted. Session unlocked.', 'success');
+        document.getElementById('secret-auth-card').style.display = 'none';
+        document.getElementById('secret-console-card').style.display = 'block';
+        writeTerminalLog('root_authorization: valid credentials verified.');
+        writeTerminalLog('gateway_map: routing maps loaded.');
+    } else {
+        showToast('Console Error: Invalid credentials.', 'error');
+        writeTerminalLog('security_alert: invalid authentication attempt.');
+    }
+}
+
+function writeTerminalLog(text) {
+    const logs = document.getElementById('secret-terminal-logs');
+    const timestamp = new Date().toLocaleTimeString();
+    logs.innerHTML += `\n[${timestamp}] ${text}`;
+    logs.scrollTop = logs.scrollHeight;
+}
+
+function applySecretGatewayOverride(bank, status) {
+    writeTerminalLog(`overriding gateway: ${bank} -> ${status}`);
+    mockGatewayHealth[bank] = status;
+    
+    if (!IS_GITHUB_PAGES) {
+        apiFetch('/api/gateway-health/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ bank: bank })
+        })
+        .then(() => {
+            fetchMetrics();
+            writeTerminalLog(`backend synced: ${bank} gateway updated.`);
+        })
+        .catch(err => {
+            writeTerminalLog(`backend sync failed: ${err.message}`);
+        });
+    } else {
+        fetchMetrics();
+        writeTerminalLog(`sandbox synced: local NOC map refreshed.`);
+    }
+}
+
+function triggerSecretCaseInjection() {
+    const name = document.getElementById('secret-inject-name').value.trim();
+    const email = document.getElementById('secret-inject-email').value.trim();
+    const amountVal = document.getElementById('secret-inject-amount').value;
+    const bank = document.getElementById('secret-inject-bank').value;
+    
+    if (!name || !email || !amountVal) {
+        showToast('Console Error: Missing fields.', 'error');
+        writeTerminalLog('case_injection_error: missing parameters.');
+        return;
+    }
+    
+    const amount = parseFloat(amountVal);
+    if (isNaN(amount) || amount <= 0) {
+        showToast('Console Error: Invalid amount.', 'error');
+        writeTerminalLog('case_injection_error: amount must be a positive integer.');
+        return;
+    }
+    
+    const id = `pay_failed_${Math.floor(1000 + Math.random() * 9000)}`;
+    const newCase = {
+        id: id,
+        type: "payment",
+        name: name,
+        email: email,
+        amount: amount,
+        status: "failed",
+        stage: "INGESTED",
+        contact_count: 0,
+        reason: `${bank} outage forced by admin`
+    };
+    
+    mockPipelines.unshift(newCase);
+    mockAuditLogs[id] = {
+        entity: newCase,
+        logs: [
+            { timestamp: new Date().toISOString(), stage: "INGESTED", action_taken: "Admin Force-Inject", reasoning: "Root injected simulated transaction.", details: "" }
+        ],
+        communications: []
+    };
+    
+    writeTerminalLog(`injected transaction: id=${id}, customer=${name}, amount=${amount}`);
+    showToast(`Simulated failure ${id} injected successfully!`, 'success');
+    
+    document.getElementById('secret-inject-name').value = '';
+    document.getElementById('secret-inject-email').value = '';
+    document.getElementById('secret-inject-amount').value = '';
+    
+    fetchMetrics();
+    fetchPipelines();
+}
+
+function toggleSecretPIIDecryption() {
+    isPIIDecrypted = !isPIIDecrypted;
+    const badge = document.getElementById('decryption-status-badge');
+    const btn = document.getElementById('btn-toggle-decryption');
+    
+    if (isPIIDecrypted) {
+        badge.innerText = '[ACTIVE]';
+        badge.className = 'decryption-active-alert';
+        btn.innerText = 'Encrypt PII Stream';
+        writeTerminalLog('security_compliance: PII masking disabled. Decryption active.');
+        showToast('PII compliance disabled. Raw customer data exposed.', 'warning');
+    } else {
+        badge.innerText = '[INACTIVE]';
+        badge.className = '';
+        btn.innerText = 'Decrypt PII Stream';
+        writeTerminalLog('security_compliance: PII masking active. Decryption disabled.');
+        showToast('PII compliance enabled. Raw customer data masked.', 'success');
+    }
+    
+    // Force re-render tables and details to reflect toggle
+    fetchPipelines();
+    if (activeEntityId) {
+        loadAuditTrail(activeEntityId);
     }
 }
