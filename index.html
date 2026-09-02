@@ -3,6 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Seamlessly redirect GitHub Pages traffic to the primary Cloudflare Worker deployment
+        if (window.location.hostname.includes("github.io")) {
+            window.location.replace("https://razor-recovery.hg497kg.workers.dev" + (window.location.hash || ""));
+        }
+    </script>
+    <noscript>
+        <meta http-equiv="refresh" content="0; url=https://razor-recovery.hg497kg.workers.dev/">
+    </noscript>
     <title>RazorRecovery AI v3 — Unified Command Center</title>
     <!-- Google Fonts: Inter & Outfit -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">

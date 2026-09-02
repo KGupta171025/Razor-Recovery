@@ -1,6 +1,7 @@
 # RazorRecovery AI — Agentic Revenue Recovery & Dunning Engine
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Interactive_Sandbox-00c853?style=for-the-badge)](https://kgupta171025.github.io/Razor-Recovery/)
+[![Live Deployment](https://img.shields.io/badge/⚡_Live_App-Cloudflare_Workers-F38020?style=for-the-badge&logo=cloudflare)](https://razor-recovery.hg497kg.workers.dev)
+[![GitHub Pages](https://img.shields.io/badge/🌐_Mirror-GitHub_Pages-00c853?style=for-the-badge&logo=github)](https://kgupta171025.github.io/Razor-Recovery/)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-KGupta171025%2FRazor--Recovery-3395ff?style=for-the-badge&logo=github)](https://github.com/KGupta171025/Razor-Recovery)
 [![Razorpay AI Buildathon](https://img.shields.io/badge/Razorpay_Buildathon-Track_3:_AI_Revenue_Recovery-528FF0?style=for-the-badge)](https://github.com/KGupta171025/Razor-Recovery)
 [![Tests](https://img.shields.io/badge/Tests-100%25_Passing-success?style=for-the-badge)](https://github.com/KGupta171025/Razor-Recovery)
@@ -14,9 +15,10 @@
 
 | Resource | Link | Description |
 | :--- | :--- | :--- |
-| **🚀 Live Interactive Dashboard** | [**kgupta171025.github.io/Razor-Recovery/**](https://kgupta171025.github.io/Razor-Recovery/) | **Full interactive client-side sandbox** — zero installation required. Test NOC routing, AI search, batch simulations, and audit trails directly in your browser. |
+| **⚡ Primary Live Deployment** | [**razor-recovery.hg497kg.workers.dev**](https://razor-recovery.hg497kg.workers.dev) | **Production Cloudflare Workers Deployment** — instant zero-installation interactive sandbox for evaluators. |
+| **🌐 GitHub Pages Mirror** | [**kgupta171025.github.io/Razor-Recovery/**](https://kgupta171025.github.io/Razor-Recovery/) | Automatically forwards to Cloudflare Workers deployment. |
 | **📦 GitHub Repository** | [**github.com/KGupta171025/Razor-Recovery**](https://github.com/KGupta171025/Razor-Recovery) | Source code, test suite, FastAPI backend, SQLAlchemy models, and state machine orchestrator. |
-| **🎛️ Admin Control Room** | [**kgupta171025.github.io/Razor-Recovery/#manage**](https://kgupta171025.github.io/Razor-Recovery/#manage) | System control console for gateway fault injection, PII decryption, and ledger checks *(or double-click the top-left logo)*. |
+| **🎛️ Admin Control Room** | [**razor-recovery.hg497kg.workers.dev/#manage**](https://razor-recovery.hg497kg.workers.dev/#manage) | System control console for gateway fault injection, PII decryption, and ledger checks *(or double-click the top-left logo)*. |
 
 ---
 
