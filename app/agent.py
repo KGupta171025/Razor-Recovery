@@ -2,8 +2,15 @@ import os
 import json
 import logging
 from datetime import datetime, timedelta, timezone
-from google import genai
-from google.genai import types
+
+try:
+    from google import genai
+    from google.genai import types
+    GENAI_AVAILABLE = True
+except ImportError:
+    genai = None
+    types = None
+    GENAI_AVAILABLE = False
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -11,10 +18,10 @@ logger = logging.getLogger("RazorRecoveryAgent")
 
 # Initialize Gemini Client
 API_KEY = os.environ.get("GEMINI_API_KEY")
-HAS_API_KEY = bool(API_KEY)
+HAS_API_KEY = bool(API_KEY) and GENAI_AVAILABLE
 client = None
 
-if HAS_API_KEY:
+if HAS_API_KEY and genai:
     try:
         client = genai.Client(api_key=API_KEY)
         logger.info("Gemini API successfully configured using new google-genai client.")
@@ -22,7 +29,7 @@ if HAS_API_KEY:
         logger.error(f"Failed to configure Gemini Client: {e}")
         HAS_API_KEY = False
 else:
-    logger.info("No GEMINI_API_KEY found. Running in simulation fallback mode.")
+    logger.info("No GEMINI_API_KEY found or offline mode active. Running in simulation fallback mode.")
 
 def call_llm(prompt: str, system_instruction: str = "") -> str:
     """Helper function to call Gemini with a prompt and system instructions, with mock fallback."""

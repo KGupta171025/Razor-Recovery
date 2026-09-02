@@ -18,6 +18,6 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install fastapi uvicorn sqlalchemy google-generativeai httpx pytest
+          pip install fastapi uvicorn sqlalchemy google-genai google-generativeai httpx pytest
       - name: Run Test Suite
         run: python test_app.py
