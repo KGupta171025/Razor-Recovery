@@ -6,6 +6,7 @@ let isVoicePlaying = false;
 let voicePlaybackInterval = null;
 let activeOverride = 'normal';
 let scorecardChart = null;
+let isPIIDecrypted = false;
 
 // Global Notification Registry
 let notificationsRegistry = [
@@ -26,7 +27,9 @@ function escapeHTML(str) {
 }
 
 // GitHub Pages Autonomic Client-Side Simulation Sandbox Mode
-const IS_GITHUB_PAGES = window.location.hostname.includes("github.io");
+const IS_GITHUB_PAGES = window.location.hostname.includes("github.io") || 
+                        window.location.protocol === 'file:' || 
+                        (!window.location.hostname.includes("127.0.0.1") && !window.location.hostname.includes("localhost"));
 
 let mockPipelines = [];
 let mockGatewayHealth = { "HDFC": "stable", "ICICI": "stable", "SBI": "stable", "UPI": "stable" };
@@ -35,19 +38,26 @@ let mockAuditLogs = {};
 
 function initMockDatabase() {
     mockPipelines = [
-        { id: "pay_failed_1001", type: "payment", name: "Customer (HDFC)", email: "rajesh@example.com", amount: 12500, status: "failed", stage: "INGESTED", contact_count: 0, reason: "Bank gateway response timeout" },
-        { id: "pay_failed_1002", type: "payment", name: "Customer (ICICI)", email: "priya@example.com", amount: 48000, status: "failed", stage: "DIAGNOSED", contact_count: 0, reason: "Incorrect OTP entered by user" },
-        { id: "inv_overdue_1003", type: "invoice", name: "Acme Enterprises", email: "billing@acme.com", amount: 145000, status: "PENDING", stage: "CHASING", contact_count: 1, reason: "B2B Overdue Invoice" },
-        { id: "inv_overdue_1004", type: "invoice", name: "Karan Johar", email: "karan@dharmaprod.com", amount: 89000, status: "PENDING", stage: "GATED", contact_count: 2, reason: "Quiet Hours blackout window" },
-        { id: "pay_failed_1005", type: "payment", name: "Customer (SBI)", email: "sanjay@example.com", amount: 9500, status: "captured", stage: "RECOVERED", contact_count: 1, reason: "Recovered via gateway switch" },
-        { id: "inv_overdue_1006", type: "invoice", name: "Vijay Mallya", email: "vijay@kingfisher.com", amount: 250000, status: "FAILED", stage: "DISPUTED", contact_count: 1, reason: "Buyer raised billing dispute claim" }
+        { id: "pay_failed_1001", type: "payment", name: "Rajesh Kumar (HDFC)", email: "rajesh@example.com", amount: 12500, status: "failed", stage: "INGESTED", contact_count: 0, bank: "HDFC", reason: "Bank gateway response timeout" },
+        { id: "pay_failed_1002", type: "payment", name: "Priya Sharma (ICICI)", email: "priya@example.com", amount: 48000, status: "failed", stage: "DIAGNOSED", contact_count: 0, bank: "ICICI", reason: "Incorrect OTP entered by user" },
+        { id: "inv_overdue_1003", type: "invoice", name: "Acme Enterprises", email: "billing@acme.com", amount: 145000, status: "PENDING", stage: "CHASING", contact_count: 1, bank: "SBI", reason: "B2B Overdue Invoice (Week 1 Nudge)" },
+        { id: "inv_overdue_1004", type: "invoice", name: "Karan Johar (Dharma)", email: "karan@dharmaprod.com", amount: 89000, status: "PENDING", stage: "GATED", contact_count: 2, bank: "HDFC", reason: "Quiet Hours blackout window (21:00-09:00 IST)" },
+        { id: "pay_failed_1005", type: "payment", name: "Sanjay Verma (SBI)", email: "sanjay@example.com", amount: 9500, status: "captured", stage: "RECOVERED", contact_count: 1, bank: "SBI", reason: "Recovered via automated gateway switch" },
+        { id: "inv_overdue_1006", type: "invoice", name: "Vijay Mallya (Kingfisher)", email: "vijay@kingfisher.com", amount: 250000, status: "FAILED", stage: "DISPUTED", contact_count: 1, bank: "ICICI", reason: "Buyer raised billing dispute claim" },
+        { id: "pay_failed_1007", type: "payment", name: "Rohan Mehta (UPI)", email: "rohan@techcorp.in", amount: 3200, status: "captured", stage: "RECOVERED", contact_count: 1, bank: "UPI", reason: "Recovered via WhatsApp UPI Intent Link" },
+        { id: "inv_overdue_1008", type: "invoice", name: "Flipkart Logistics", email: "vendor-pay@flipkart.com", amount: 320000, status: "PENDING", stage: "CHASING", contact_count: 2, bank: "HDFC", reason: "Net-30 B2B invoice escalation sequence" },
+        { id: "pay_failed_1009", type: "payment", name: "Ananya Roy (ICICI)", email: "ananya.roy@designco.com", amount: 74500, status: "failed", stage: "GATED", contact_count: 0, bank: "ICICI", reason: "Bank switch degraded - retry postponed" },
+        { id: "inv_overdue_1010", type: "invoice", name: "Zomato Quick Commerce", email: "payments@zomato.com", amount: 18900, status: "PAID", stage: "RECOVERED", contact_count: 1, bank: "UPI", reason: "Promise-to-Pay fulfilled on due date" },
+        { id: "pay_failed_1011", type: "payment", name: "Vikram Malhotra", email: "vikram@malhotragroup.in", amount: 110000, status: "failed", stage: "STOPPED", contact_count: 3, bank: "SBI", reason: "Max contact limit (3/3) reached - outreach halted" },
+        { id: "inv_overdue_1012", type: "invoice", name: "OYO Hospitality Ltd", email: "finance@oyo.com", amount: 425000, status: "PENDING", stage: "CHASING", contact_count: 1, bank: "HDFC", reason: "Dynamic discount incentive (5% credit) offered" }
     ];
     
+    mockAuditLogs = {};
     mockPipelines.forEach(item => {
         mockAuditLogs[item.id] = {
             entity: item,
             logs: [
-                { timestamp: new Date(Date.now() - 3600000).toISOString(), stage: "INGESTED", action_taken: "Record Created", reasoning: "System detected payment/invoice event.", details: "" }
+                { timestamp: new Date(Date.now() - 3600000).toISOString(), stage: "INGESTED", action_taken: "Record Ingested", reasoning: "System ingested payment/invoice event via webhook simulator.", details: `Initial amount INR ${item.amount.toLocaleString('en-IN')}` }
             ],
             communications: []
         };
@@ -56,9 +66,9 @@ function initMockDatabase() {
             mockAuditLogs[item.id].logs.push({
                 timestamp: new Date(Date.now() - 1800000).toISOString(),
                 stage: "DIAGNOSED",
-                action_taken: "AI Failure Analysis",
+                action_taken: "AI Failure Diagnosis",
                 reasoning: item.reason,
-                details: ""
+                details: `Selected strategy: ${item.stage === 'DISPUTED' ? 'HUMAN_ESCALATION' : 'AUTONOMOUS_DUNNING'}`
             });
         }
         
@@ -66,15 +76,15 @@ function initMockDatabase() {
             mockAuditLogs[item.id].logs.push({
                 timestamp: new Date(Date.now() - 900000).toISOString(),
                 stage: "CHASING",
-                action_taken: "Outreach Campaign Triggered",
-                reasoning: `Initiated attempt ${item.contact_count}.`,
-                details: ""
+                action_taken: `Outreach Sequence ${item.contact_count}/3`,
+                reasoning: `Initiated attempt ${item.contact_count} via compliant escalation policy.`,
+                details: "Tone adapted to customer segment."
             });
             mockAuditLogs[item.id].communications.push({
                 timestamp: new Date(Date.now() - 900000).toISOString(),
                 channel: "email",
                 direction: "outbound",
-                content: `Dear ${item.name}, your checkout for INR ${item.amount} was interrupted. Please retry.`
+                content: `Dear ${item.name}, your transaction for INR ${item.amount.toLocaleString('en-IN')} was interrupted. Please use your secure link to complete the payment.`
             });
         }
         
@@ -83,7 +93,15 @@ function initMockDatabase() {
                 timestamp: new Date(Date.now() - 300000).toISOString(),
                 channel: "voice",
                 direction: "inbound",
-                content: "AUDIO_CALL_TRANSCRIPT: Urgent call from buyer. I dispute the billing amount of this purchase."
+                content: "AUDIO_CALL_TRANSCRIPT: Urgent call from buyer. I dispute the billing amount of this purchase. Please hold all automated collection retries until verified."
+            });
+        } else if (item.stage === 'RECOVERED') {
+            mockAuditLogs[item.id].logs.push({
+                timestamp: new Date(Date.now() - 60000).toISOString(),
+                stage: "RECOVERED",
+                action_taken: "Payment Captured",
+                reasoning: "Webhook confirmed payment.captured. Campaign marked completed.",
+                details: `Full sum INR ${item.amount.toLocaleString('en-IN')} recovered.`
             });
         }
     });
@@ -106,20 +124,25 @@ function apiFetch(url, options = {}) {
     
     if (pathname === '/api/metrics') {
         const atRisk = mockPipelines
-            .filter(item => item.status !== 'captured' && item.status !== 'RECOVERED' && item.status !== 'CANCELLED')
+            .filter(item => item.status !== 'captured' && item.status !== 'RECOVERED' && item.status !== 'CANCELLED' && item.status !== 'PAID')
             .reduce((sum, item) => sum + item.amount, 0);
         const recovered = mockPipelines
-            .filter(item => item.status === 'captured' || item.status === 'RECOVERED')
+            .filter(item => item.status === 'captured' || item.status === 'RECOVERED' || item.status === 'PAID')
             .reduce((sum, item) => sum + item.amount, 0);
-        const recoveredCount = mockPipelines.filter(item => item.status === 'captured' || item.status === 'RECOVERED').length;
+        const recoveredCount = mockPipelines.filter(item => item.status === 'captured' || item.status === 'RECOVERED' || item.status === 'PAID').length;
+        const totalCount = mockPipelines.length;
+        const successRate = totalCount > 0 ? (recoveredCount / totalCount * 100) : 0;
+        const activeCount = mockPipelines.filter(item => item.stage !== 'RECOVERED' && item.stage !== 'STOPPED').length;
+        const stoppedCount = mockPipelines.filter(i => i.stage === 'STOPPED').length;
+        const disputedCount = mockPipelines.filter(i => i.stage === 'DISPUTED').length;
         
         responseData = {
-            risk_amount: atRisk,
-            recovered_amount: recovered,
-            recovered_count: recoveredCount,
-            total_cases: mockPipelines.length,
-            stopped_cases: mockPipelines.filter(i => i.stage === 'STOPPED').length,
-            disputed_cases: mockPipelines.filter(i => i.stage === 'DISPUTED').length,
+            total_at_risk: Math.round(atRisk * 100) / 100,
+            total_recovered: Math.round(recovered * 100) / 100,
+            recovery_rate: Math.round(successRate * 100) / 100,
+            active_cases: activeCount,
+            stopped_cases: stoppedCount,
+            disputed_cases: disputedCount,
             simulation_override: mockOverride
         };
     }
@@ -157,12 +180,22 @@ function apiFetch(url, options = {}) {
         if (q.trim()) {
             const q_lower = q.toLowerCase();
             filtered = filtered.filter(item => {
-                if (q_lower.includes("hdfc") && !item.name.toLowerCase().includes("hdfc")) return false;
-                if (q_lower.includes("icici") && !item.name.toLowerCase().includes("icici")) return false;
-                if (q_lower.includes("sbi") && !item.name.toLowerCase().includes("sbi")) return false;
-                if (q_lower.includes("above") || q_lower.includes("over")) {
+                const combinedText = `${item.id} ${item.name} ${item.email} ${item.reason} ${item.stage} ${item.bank}`.toLowerCase();
+                if (q_lower.includes("hdfc") && !combinedText.includes("hdfc")) return false;
+                if (q_lower.includes("icici") && !combinedText.includes("icici")) return false;
+                if (q_lower.includes("sbi") && !combinedText.includes("sbi")) return false;
+                if (q_lower.includes("upi") && !combinedText.includes("upi")) return false;
+                if (q_lower.includes("dispute") && item.stage !== 'DISPUTED') return false;
+                if (q_lower.includes("recovered") && item.stage !== 'RECOVERED') return false;
+                if (q_lower.includes("overdue") && item.type !== 'invoice') return false;
+                if (q_lower.includes("failed") && item.type !== 'payment') return false;
+                if (q_lower.includes("above") || q_lower.includes("over") || q_lower.includes(">")) {
                     const match = q_lower.match(/\d+/);
                     if (match && item.amount <= parseInt(match[0])) return false;
+                }
+                if (q_lower.includes("below") || q_lower.includes("under") || q_lower.includes("<")) {
+                    const match = q_lower.match(/\d+/);
+                    if (match && item.amount >= parseInt(match[0])) return false;
                 }
                 return true;
             });
@@ -195,20 +228,25 @@ function apiFetch(url, options = {}) {
             action_label = "Refund & Close Case";
         } else if (item.stage === 'GATED') {
             probability = 60;
-            reasoning = "Active bank gateway downtime detected on HDFC. Switch routing nodes.";
+            reasoning = `Active bank downtime or quiet hours detected on ${item.bank || 'HDFC'}. Switch routing nodes.`;
             recommended_action = "induce_gateway_failure";
             action_label = "Reroute Gateway Node";
         } else if (item.contact_count >= 2) {
             probability = 70;
-            reasoning = "Multiple outreach attempts ignored. Settle dispute or mark opt-out.";
+            reasoning = "Multiple outreach attempts ignored. Offer dynamic discount or mark opt-out.";
             recommended_action = "customer_opt_out";
             action_label = "Force Cancel Campaign";
+        } else if (item.amount > 100000) {
+            probability = 92;
+            reasoning = "High-value enterprise invoice. High recovery priority with personalized escalation.";
+            recommended_action = "normal";
+            action_label = "Dispatch Priority Nudge";
         }
         
         responseData = { probability, reasoning, recommended_action, action_label };
     }
     
-    else if (pathname.startsWith('/api/audit/')) {
+    else if (pathname.startsWith('/api/audit/') || pathname.startsWith('/api/audit-trail/')) {
         const entityId = pathname.split('/').pop();
         responseData = mockAuditLogs[entityId] || { logs: [], communications: [], entity: {} };
     }
@@ -217,23 +255,40 @@ function apiFetch(url, options = {}) {
         const body = JSON.parse(options.body || '{}');
         const entityId = body.entity_id;
         const item = mockPipelines.find(i => i.id === entityId);
+        let stepStatus = "diagnosed";
+        let stepMsg = "";
         
         if (item) {
-            if (item.stage === 'INGESTED') {
+            if (mockGatewayHealth[item.bank || "HDFC"] === "degraded") {
+                item.stage = "GATED";
+                stepStatus = "gated_degraded";
+                stepMsg = `Gateway degraded for ${item.bank || 'HDFC'}. Pausing retry.`;
+            } else if (item.stage === 'INGESTED') {
                 item.stage = 'DIAGNOSED';
+                stepStatus = "diagnosed";
             } else if (item.stage === 'DIAGNOSED') {
                 item.stage = 'CHASING';
                 item.contact_count = Math.min(3, item.contact_count + 1);
-            } else if (item.stage === 'CHASING') {
+                stepStatus = "contacted";
+            } else if (item.stage === 'CHASING' || item.stage === 'GATED') {
                 if (item.contact_count >= 3) {
                     item.stage = 'STOPPED';
                     item.status = 'FAILED';
+                    stepStatus = "stopped";
+                    stepMsg = "Max outreach contact limit (3/3) reached.";
                 } else if (mockOverride === 'customer_opt_out') {
                     item.stage = 'STOPPED';
                     item.status = 'FAILED';
+                    stepStatus = "stopped";
+                    stepMsg = "Customer opted out via STOP keyword.";
+                } else if (mockOverride === 'dispute_trigger') {
+                    item.stage = 'DISPUTED';
+                    stepStatus = "disputed";
+                    stepMsg = "Dispute raised by customer.";
                 } else {
                     item.stage = 'RECOVERED';
                     item.status = 'captured';
+                    stepStatus = "recovered";
                 }
             }
             
@@ -242,27 +297,56 @@ function apiFetch(url, options = {}) {
                     timestamp: new Date().toISOString(),
                     stage: item.stage,
                     action_taken: "Step Campaign Simulated",
-                    reasoning: "Simulating campaign dunning progression inside browser.",
-                    details: ""
+                    reasoning: `State machine progressed case to ${item.stage}.`,
+                    details: stepMsg
                 });
             }
         }
-        responseData = { status: "success" };
+        responseData = { status: stepStatus, amount: item ? item.amount : 0, message: stepMsg, bank: item ? (item.bank || "HDFC") : "HDFC" };
     }
     
     else if (pathname === '/api/run-batch') {
+        let batchRecoveredAmount = 0;
+        let batchRecoveredCount = 0;
+        let batchStoppedCount = 0;
+        let batchExceptions = [];
+        
         mockPipelines.forEach(item => {
-            if (item.stage !== 'STOPPED' && item.stage !== 'RECOVERED') {
+            if (item.stage === 'DISPUTED') {
+                item.stage = 'STOPPED';
+                batchStoppedCount++;
+                batchExceptions.push(`Invoice ${item.id} stopped: Buyer raised billing dispute claim`);
+            } else if (mockOverride === 'customer_opt_out' || item.contact_count >= 3) {
+                item.stage = 'STOPPED';
+                item.status = 'FAILED';
+                batchStoppedCount++;
+                batchExceptions.push(`Case ${item.id} stopped: Max contact limit (3/3) reached / Opt-Out received`);
+            } else {
                 item.stage = 'RECOVERED';
                 item.status = 'captured';
+                batchRecoveredCount++;
+                batchRecoveredAmount += item.amount;
             }
         });
-        responseData = { status: "success", recovered_count: mockPipelines.length };
+        
+        const totalRecords = mockPipelines.length;
+        const recoveryRate = totalRecords > 0 ? Math.round((batchRecoveredCount / totalRecords) * 10000) / 100 : 0;
+        
+        responseData = {
+            status: "success",
+            total_records: totalRecords,
+            recovered_count: batchRecoveredCount,
+            recovered_amount: Math.round(batchRecoveredAmount * 100) / 100,
+            stopped_count: batchStoppedCount,
+            active_count: mockPipelines.filter(i => i.stage !== 'RECOVERED' && i.stage !== 'STOPPED').length,
+            recovery_rate: recoveryRate,
+            exceptions: batchExceptions
+        };
     }
     
     else if (pathname === '/api/seed') {
         initMockDatabase();
-        responseData = { status: "success" };
+        responseData = { status: "success", message: `Database successfully reset and seeded with ${mockPipelines.length} records.` };
     }
     
     else if (pathname === '/api/dispute-action') {
@@ -270,16 +354,37 @@ function apiFetch(url, options = {}) {
         const entityId = body.entity_id;
         const action = body.action;
         const item = mockPipelines.find(i => i.id === entityId);
+        let msg = "Dispute resolved.";
         
         if (item) {
             if (action === 'REFUND_RESOLVE') {
                 item.stage = 'STOPPED';
                 item.status = 'CANCELLED';
+                msg = `Case ${entityId} refunded and marked resolved.`;
             } else if (action === 'RESCHEDULE_PROMISE') {
                 item.stage = 'GATED';
+                msg = `Case ${entityId} promise-to-pay date recorded and paused.`;
             }
         }
-        responseData = { status: "success" };
+        responseData = { status: "success", message: msg };
+    }
+    
+    else if (pathname === '/api/security/verify-ledger') {
+        responseData = {
+            status: "success",
+            verified: true,
+            total_blocks: 55,
+            integrity: "100% SECURE",
+            hash: "a3f8902b1c4e9d7f023812abdc78ef40"
+        };
+    }
+    
+    else if (pathname === '/api/security/backup') {
+        responseData = {
+            status: "success",
+            message: "Ledger cryptographic snapshot secured successfully in memory.",
+            timestamp: new Date().toISOString()
+        };
     }
     
     return Promise.resolve({
@@ -1032,7 +1137,11 @@ function triggerBatchRecovery() {
         if (data.exceptions && data.exceptions.length > 0) {
             data.exceptions.forEach(e => {
                 const li = document.createElement('li');
-                li.innerHTML = `<strong>${e.id}</strong> - ${e.reason}`;
+                if (typeof e === 'string') {
+                    li.innerHTML = escapeHTML(e);
+                } else {
+                    li.innerHTML = `<strong>${escapeHTML(e.id || '')}</strong> - ${escapeHTML(e.reason || '')}`;
+                }
                 list.appendChild(li);
             });
         } else {
@@ -1394,8 +1503,6 @@ function loadSystemSettings() {
 }
 
 // PII Masking/Unmasking Helper Drivers
-let isPIIDecrypted = false;
-
 function maskName(name) {
     if (!name) return "";
     const parts = name.split(" ");
