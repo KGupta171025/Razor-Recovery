@@ -707,7 +707,11 @@ function fetchPipelines(searchQuery = '') {
                 // Format Status Stages badges
                 let stageClass = 'status-gated';
                 if (item.stage === 'RECOVERED') stageClass = 'status-recovered';
-                if (item.stage === 'STOPPED') stageClass = 'status-stopped';
+                else if (item.stage === 'STOPPED') stageClass = 'status-stopped';
+                else if (item.stage === 'DISPUTED') stageClass = 'status-disputed';
+                else if (item.stage === 'CHASING') stageClass = 'status-chasing';
+                else if (item.stage === 'DIAGNOSED') stageClass = 'status-diagnosed';
+                else if (item.stage === 'INGESTED') stageClass = 'status-ingested';
                 
                 // Policy adherence status column check
                 const isCompliant = item.stage !== 'STOPPED' || item.contact_count <= 3;

@@ -1,5 +1,6 @@
 import os
 import unittest
+from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from app.database import engine, SessionLocal, init_db, Base
 from app.models import Invoice, Payment, AuditLog, Communication
@@ -299,7 +300,7 @@ class TestRazorRecovery(unittest.TestCase):
             customer_email="bad@guy.com",
             customer_phone="123456",
             amount=-100.0,  # Violates CheckConstraint!
-            due_at=datetime.utcnow() + timedelta(days=1)
+            due_at=datetime.now(timezone.utc) + timedelta(days=1)
         )
         self.db.add(bad_invoice)
         with self.assertRaises(Exception):
