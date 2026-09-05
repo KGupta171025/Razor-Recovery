@@ -2,55 +2,74 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="description" content="RazorRecovery AI — Enterprise Autonomous Revenue Recovery, Dunning Orchestrator & Payment Failure Resolution Engine.">
+    <meta name="theme-color" content="#070b14">
+    <meta property="og:title" content="RazorRecovery AI v3 — Unified Command Center">
+    <meta property="og:description" content="Autonomous Agentic Revenue Recovery & Dunning Engine for Razorpay AI Buildathon (Track 3).">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://razor-recovery.hg497kg.workers.dev/">
+    
     <title>RazorRecovery AI v3 — Unified Command Center</title>
+    
     <!-- Google Fonts: Inter & Outfit -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <!-- FontAwesome for Premium Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Enterprise Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <!-- Chart.js for Recovery Visualizations -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="styles.css?v=5">
+    
+    <link rel="stylesheet" href="styles.css?v=6">
     <link rel="icon" type="image/png" href="https://razorpay.com/favicon.png">
 </head>
 <body>
-    <canvas id="bg-canvas"></canvas>
+    <!-- Accessible Skip Link -->
+    <a href="#main-workspace" class="skip-nav-link">Skip to main content</a>
+
+    <!-- Interactive Particle Backdrop Canvas -->
+    <canvas id="bg-canvas" aria-hidden="true"></canvas>
     
     <div class="dashboard-container">
         <!-- Sidebar Navigation -->
-        <aside class="sidebar">
-            <div class="logo-area" ondblclick="openSecretPanel()" style="cursor: pointer; user-select: none;">
-                <svg class="logo-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:24px; height:24px; filter:drop-shadow(0 0 8px rgba(51, 149, 255, 0.4)); margin-right:4px;">
+        <aside class="sidebar" aria-label="Sidebar Navigation">
+            <div class="logo-area" ondblclick="openSecretPanel()" role="button" tabindex="0" title="Double click or press M for Root Console" aria-label="RazorRecovery Logo - Double click for Root Console">
+                <svg class="logo-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path d="M14.26 10.098L3.389 17.166 1.564 24h9.008l3.688-13.902Z" fill="#2d3d54" />
                     <path d="M22.436 0l-11.91 7.773-1.174 4.276 6.625-4.297L11.65 24h4.391l6.395-24z" fill="#3395ff" />
                 </svg>
                 <div class="logo-text">
                     <span class="logo-title">RazorRecovery</span>
-                    <span class="logo-subtitle">AI v3</span>
+                    <span class="logo-subtitle">AI v3 Enterprise</span>
                 </div>
             </div>
             
-            <nav class="nav-links">
-                <a href="#" class="nav-item active"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
-                <a href="#" class="nav-item" onclick="openRoiModal()"><i class="fa-solid fa-calculator"></i> AI Strategy Playground</a>
-                <a href="#" class="nav-item" onclick="openBatchModal()"><i class="fa-solid fa-rocket"></i> Run Batch Simulator</a>
-                <a href="#" class="nav-item" onclick="exportAuditLedgerCSV()"><i class="fa-solid fa-file-csv"></i> Export Audit Ledger</a>
-                <a href="#" class="nav-item" onclick="openCertificateModal()"><i class="fa-solid fa-certificate"></i> Compliance Certificate</a>
-                <a href="#" class="nav-item" onclick="triggerSeed()"><i class="fa-solid fa-rotate-left"></i> Reset & Seed Data</a>
-                <a href="https://github.com/KGupta171025/Razor-Recovery" target="_blank" rel="noopener noreferrer" class="nav-item" style="color: var(--accent-glow); margin-top: 8px;"><i class="fa-brands fa-github"></i> GitHub Repo <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px; margin-left: 4px;"></i></a>
+            <nav class="nav-links" aria-label="Primary Application Navigation">
+                <a href="#" class="nav-item active" aria-current="page"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Dashboard</a>
+                <a href="javascript:void(0)" class="nav-item" onclick="openRoiModal()"><i class="fa-solid fa-calculator" aria-hidden="true"></i> AI Strategy Playground</a>
+                <a href="javascript:void(0)" class="nav-item" onclick="openBatchModal()"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Run Batch Simulator</a>
+                <a href="javascript:void(0)" class="nav-item" onclick="exportAuditLedgerCSV()"><i class="fa-solid fa-file-csv" aria-hidden="true"></i> Export Audit Ledger</a>
+                <a href="javascript:void(0)" class="nav-item" onclick="openCertificateModal()"><i class="fa-solid fa-certificate" aria-hidden="true"></i> Compliance Certificate</a>
+                <a href="javascript:void(0)" class="nav-item" onclick="triggerSeed()"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reset & Seed Data</a>
+                <a href="https://github.com/KGupta171025/Razor-Recovery" target="_blank" rel="noopener noreferrer" class="nav-item" style="color: var(--accent-glow); margin-top: 8px;">
+                    <i class="fa-brands fa-github" aria-hidden="true"></i> GitHub Repo <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px; margin-left: 4px;" aria-hidden="true"></i>
+                </a>
             </nav>
             
             <div class="sidebar-footer">
                 <div class="sidebar-security-badge">
-                    <i class="fa-solid fa-shield-halved security-icon"></i>
+                    <i class="fa-solid fa-shield-halved security-icon" aria-hidden="true"></i>
                     <div class="security-details">
                         <span class="security-title">NOC Security Policy</span>
                         <span class="security-grade">Compliance: <strong>A+ / Secure</strong></span>
                     </div>
                 </div>
 
-                <div class="system-status">
-                    <div class="status-indicator online"></div>
+                <div class="system-status" role="status" aria-live="polite">
+                    <div class="status-indicator online" aria-hidden="true"></div>
                     <div class="status-details">
                         <span class="status-name">Agent Status: Active</span>
                         <span class="status-mode" id="api-mode">LLM Engine: Ready (Active)</span>
@@ -60,52 +79,53 @@
         </aside>
 
         <!-- Main Workspace -->
-        <main class="main-content">
+        <main class="main-content" id="main-workspace" role="main">
             <!-- Header Bar with Global Search -->
             <header class="header-bar">
-                <div class="search-container" style="display:flex; flex-direction:column; gap:6px; flex:1; max-width:650px;">
-                    <div class="search-wrapper" style="position:relative; width:100%;">
-                        <i class="fa-solid fa-wand-magic-sparkles search-icon" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--accent-glow);"></i>
-                        <input type="text" id="ai-query-input" placeholder="Ask AI Copilot... (e.g. 'failures on HDFC bank')" class="global-search-input" style="padding-left:36px; padding-right:80px; width:100%; box-sizing:border-box;">
-                        <button id="ai-query-btn" onclick="executeAISearch()" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--accent-glow); border:none; color:white; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:600; transition:all 0.2s;"><i class="fa-solid fa-arrow-right"></i> Run AI</button>
+                <div class="search-container" role="search">
+                    <label for="ai-query-input" class="sr-only">Ask AI Copilot</label>
+                    <div class="search-wrapper">
+                        <i class="fa-solid fa-wand-magic-sparkles search-icon" aria-hidden="true"></i>
+                        <input type="text" id="ai-query-input" placeholder="Ask AI Copilot... (e.g. 'failures on HDFC bank' or press '/')" class="global-search-input" autocomplete="off">
+                        <button id="ai-query-btn" onclick="executeAISearch()" aria-label="Run AI Search"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i> Run AI</button>
                     </div>
-                    <div class="suggested-tags" style="display:flex; gap:6px; align-items:center;">
-                        <span class="tag" style="cursor:pointer;" onclick="suggestAIQuery('failures on HDFC bank')">"failures on HDFC bank"</span>
-                        <span class="tag" style="cursor:pointer;" onclick="suggestAIQuery('recovered amount above 50000')">"recovered amount above 50000"</span>
-                        <span class="tag" style="cursor:pointer;" onclick="suggestAIQuery('overdue invoices with 2 retries')">"overdue invoices with 2 retries"</span>
+                    <div class="suggested-tags" aria-label="Quick Search Suggestions">
+                        <span class="tag" role="button" tabindex="0" onclick="suggestAIQuery('failures on HDFC bank')">"failures on HDFC bank"</span>
+                        <span class="tag" role="button" tabindex="0" onclick="suggestAIQuery('recovered amount above 50000')">"recovered amount above 50000"</span>
+                        <span class="tag" role="button" tabindex="0" onclick="suggestAIQuery('overdue invoices with 2 retries')">"overdue invoices with 2 retries"</span>
                     </div>
                 </div>
-                <div class="user-profile-controls">
-                    <i class="fa-regular fa-user profile-icon" onclick="openProfileModal()" title="User Profile"></i>
-                    <i class="fa-regular fa-bell notification-icon" onclick="openNotificationsModal()" title="Notifications Log"></i>
-                    <i class="fa-solid fa-gear settings-icon" onclick="openSettingsModal()" title="System Preferences"></i>
+                <div class="user-profile-controls" aria-label="User & System Preferences">
+                    <i class="fa-regular fa-user profile-icon" onclick="openProfileModal()" role="button" tabindex="0" title="User Profile" aria-label="User Profile"></i>
+                    <i class="fa-regular fa-bell notification-icon" onclick="openNotificationsModal()" role="button" tabindex="0" title="Notifications Log" aria-label="Notifications Log"></i>
+                    <i class="fa-solid fa-gear settings-icon" onclick="openSettingsModal()" role="button" tabindex="0" title="System Preferences" aria-label="System Preferences"></i>
                 </div>
             </header>
 
             <!-- Live Operations Telemetry Stream -->
-            <div class="live-ops-ticker-bar" id="live-ops-ticker">
+            <section class="live-ops-ticker-bar" id="live-ops-ticker" role="region" aria-label="Live NOC Telemetry Stream">
                 <div class="ticker-badge">
-                    <span class="pulsing-radar-dot"></span>
+                    <span class="pulsing-radar-dot" aria-hidden="true"></span>
                     <span class="ticker-title">LIVE NOC STREAM</span>
                 </div>
-                <div class="ticker-message-container">
+                <div class="ticker-message-container" role="status" aria-live="polite">
                     <div class="ticker-message" id="ticker-live-text">
-                        <i class="fa-solid fa-bolt" style="color:var(--warning);"></i> <span>[00:20:14] HDFC Gateway: Bank Response Timeout on ₹48,000 &rarr; AI Action: Switched to WhatsApp UPI Intent Link.</span>
+                        <i class="fa-solid fa-bolt" style="color:var(--warning);" aria-hidden="true"></i> <span>[00:20:14] HDFC Gateway: Bank Response Timeout on ₹48,000 &rarr; AI Action: Switched to WhatsApp UPI Intent Link.</span>
                     </div>
                 </div>
                 <div class="ticker-controls">
-                    <button class="btn-ticker" onclick="triggerManualTelemetryEvent()" title="Simulate Inbound Webhook Event"><i class="fa-solid fa-plus-circle"></i> Inject Event</button>
-                    <button class="btn-ticker" id="btn-ticker-toggle" onclick="toggleTelemetryStream()" title="Pause/Resume Stream"><i class="fa-solid fa-pause"></i> Live</button>
+                    <button class="btn-ticker" onclick="triggerManualTelemetryEvent()" title="Simulate Inbound Webhook Event" aria-label="Inject Mock Telemetry Event"><i class="fa-solid fa-plus-circle" aria-hidden="true"></i> Inject Event</button>
+                    <button class="btn-ticker" id="btn-ticker-toggle" onclick="toggleTelemetryStream()" title="Pause/Resume Stream" aria-label="Pause or Resume Telemetry Stream"><i class="fa-solid fa-pause" aria-hidden="true"></i> Live</button>
                 </div>
-            </div>
+            </section>
 
             <!-- Unified Command Center Cards -->
-            <section class="unified-command-center">
+            <section class="unified-command-center" aria-label="Key Performance Indicators">
                 <div class="metric-card card-risk">
                     <div class="metric-info">
                         <span class="metric-label">Revenue at Risk <span class="badge badge-risk">⚠️ High</span></span>
                         <h2 class="metric-value" id="val-risk">₹19,09,958.68</h2>
-                        <div class="progress-bar-slider">
+                        <div class="progress-bar-slider" aria-hidden="true">
                             <div class="slider-fill fill-risk" style="width: 78%;"></div>
                             <div class="slider-labels">
                                 <span>Low</span>
@@ -118,9 +138,9 @@
 
                 <div class="metric-card card-recovered">
                     <div class="metric-info">
-                        <span class="metric-label">Revenue Recovered <i class="fa-solid fa-arrow-trend-up trend-up"></i></span>
+                        <span class="metric-label">Revenue Recovered <i class="fa-solid fa-arrow-trend-up trend-up" aria-hidden="true"></i></span>
                         <h2 class="metric-value" id="val-recovered">₹7,94,799.15</h2>
-                        <div class="metric-line-indicator fill-recovered" style="width: 61%;"></div>
+                        <div class="metric-line-indicator fill-recovered" style="width: 61%;" aria-hidden="true"></div>
                     </div>
                 </div>
 
@@ -128,7 +148,7 @@
                     <div class="metric-info">
                         <span class="metric-label">Recovery Rate <span class="badge badge-rate">%</span></span>
                         <h2 class="metric-value" id="val-rate">61.82%</h2>
-                        <div class="metric-line-indicator fill-rate" style="width: 61.82%;"></div>
+                        <div class="metric-line-indicator fill-rate" style="width: 61.82%;" aria-hidden="true"></div>
                     </div>
                 </div>
 
@@ -136,8 +156,8 @@
                     <div class="metric-info">
                         <span class="metric-label">Active Dunning</span>
                         <h2 class="metric-value" id="val-active">13</h2>
-                        <div class="progress-ring-mini">
-                            <svg width="36" height="36">
+                        <div class="progress-ring-mini" aria-hidden="true">
+                            <svg width="36" height="36" viewBox="0 0 36 36">
                                 <circle cx="18" cy="18" r="14" class="ring-bg"></circle>
                                 <circle cx="18" cy="18" r="14" class="ring-fill" stroke-dashoffset="30"></circle>
                             </svg>
@@ -149,79 +169,80 @@
             <!-- Split Panel Grid -->
             <div class="workspace-grid-three">
                 <!-- Column 1: AI Gateway Routing Map -->
-                <div class="grid-col col-noc">
+                <section class="grid-col col-noc" aria-label="AI Gateway Routing Network Operations Center">
                     <div class="card-title-header">
                         <h3>AI Gateway Routing Map <span class="sup-text">[cite: 1]</span></h3>
                         <span class="sub-header-label">BANK GATEWAYS (NOC)</span>
                     </div>
                     
                     <div class="noc-network-map">
-                        <div class="noc-nodes-column font-nodes">
-                            <div class="node-bank" id="node-hdfc" onclick="toggleGatewayHealth('HDFC')">
-                                <i class="fa-solid fa-building-columns icon-red"></i> HDFC
+                        <div class="noc-nodes-column font-nodes" role="group" aria-label="Banking Gateway Switch Nodes">
+                            <div class="node-bank" id="node-hdfc" onclick="toggleGatewayHealth('HDFC')" role="button" tabindex="0" aria-label="Toggle HDFC Gateway Health">
+                                <i class="fa-solid fa-building-columns icon-red" aria-hidden="true"></i> HDFC
                             </div>
-                            <div class="node-bank" id="node-icici" onclick="toggleGatewayHealth('ICICI')">
-                                <i class="fa-solid fa-building-columns icon-red"></i> ICICI
+                            <div class="node-bank" id="node-icici" onclick="toggleGatewayHealth('ICICI')" role="button" tabindex="0" aria-label="Toggle ICICI Gateway Health">
+                                <i class="fa-solid fa-building-columns icon-red" aria-hidden="true"></i> ICICI
                             </div>
-                            <div class="node-bank" id="node-sbi" onclick="toggleGatewayHealth('SBI')">
-                                <i class="fa-solid fa-building-columns icon-blue"></i> SBI
+                            <div class="node-bank" id="node-sbi" onclick="toggleGatewayHealth('SBI')" role="button" tabindex="0" aria-label="Toggle SBI Gateway Health">
+                                <i class="fa-solid fa-building-columns icon-blue" aria-hidden="true"></i> SBI
                             </div>
-                            <div class="node-bank" id="node-upi" onclick="toggleGatewayHealth('UPI')">
-                                <i class="fa-solid fa-mobile-screen icon-yellow"></i> UPI
+                            <div class="node-bank" id="node-upi" onclick="toggleGatewayHealth('UPI')" role="button" tabindex="0" aria-label="Toggle UPI Gateway Health">
+                                <i class="fa-solid fa-mobile-screen icon-yellow" aria-hidden="true"></i> UPI
                             </div>
                         </div>
                         
-                        <div class="noc-svg-wires">
+                        <div class="noc-svg-wires" aria-hidden="true">
                             <svg id="svg-wires-container" width="100%" height="100%">
                                 <!-- Dynamic wires generated in JS -->
                             </svg>
                         </div>
                         
-                        <div class="noc-status-column font-status">
-                            <div class="health-target"><span class="bullet-green"></span> Stable</div>
-                            <div class="health-target"><span class="bullet-red"></span> Degraded</div>
-                            <div class="health-target"><span class="bullet-orange"></span> Slow/Jitter</div>
-                            <div class="health-target"><span class="bullet-red"></span> Down/STG</div>
-                            <div class="health-target"><span class="bullet-yellow"></span> UPI</div>
+                        <div class="noc-status-column font-status" aria-label="Target Gateway Status Types">
+                            <div class="health-target"><span class="bullet-green" aria-hidden="true"></span> Stable</div>
+                            <div class="health-target"><span class="bullet-red" aria-hidden="true"></span> Degraded</div>
+                            <div class="health-target"><span class="bullet-orange" aria-hidden="true"></span> Slow/Jitter</div>
+                            <div class="health-target"><span class="bullet-red" aria-hidden="true"></span> Down/STG</div>
+                            <div class="health-target"><span class="bullet-yellow" aria-hidden="true"></span> UPI</div>
                         </div>
                     </div>
 
                     <div class="noc-footer-simulation">
                         <span>Real-time failure simulation Toggles</span>
                         <label class="switch">
-                            <input type="checkbox" id="noc-simulation-switch" onchange="toggleAllFailures(this)">
+                            <input type="checkbox" id="noc-simulation-switch" onchange="toggleAllFailures(this)" aria-label="Toggle All Gateways Failure Simulation">
                             <span class="switch-slider"></span>
                         </label>
                     </div>
-                </div>
+                </section>
 
                 <!-- Column 2: Pipelines & Performance Scorecard -->
-                <div class="grid-col col-pipelines">
+                <section class="grid-col col-pipelines" aria-label="Recovery Pipelines & Performance Scorecard">
                     <div class="pipeline-card-header">
                         <h3>Recovery Pipelines</h3>
                         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                            <div class="tabs">
-                                <button class="tab-btn active" onclick="filterPipeline('ALL')">All Cases</button>
-                                <button class="tab-btn" onclick="filterPipeline('payment')">Payments</button>
-                                <button class="tab-btn" onclick="filterPipeline('invoice')">Invoices</button>
-                                <button class="tab-btn" onclick="filterPipeline('RECOVERED')">Recovered</button>
+                            <div class="tabs" role="tablist" aria-label="Pipeline Filters">
+                                <button class="tab-btn active" role="tab" aria-selected="true" onclick="filterPipeline('ALL')">All Cases</button>
+                                <button class="tab-btn" role="tab" aria-selected="false" onclick="filterPipeline('payment')">Payments</button>
+                                <button class="tab-btn" role="tab" aria-selected="false" onclick="filterPipeline('invoice')">Invoices</button>
+                                <button class="tab-btn" role="tab" aria-selected="false" onclick="filterPipeline('RECOVERED')">Recovered</button>
                             </div>
-                            <button class="btn btn-secondary" onclick="exportAuditLedgerCSV()" title="Export Compliance Audit Trail as CSV" style="font-size: 10px; padding: 4px 10px; border-radius: 6px; display: flex; align-items: center; gap: 4px;">
-                                <i class="fa-solid fa-download"></i> CSV
+                            <button class="btn btn-secondary" onclick="exportAuditLedgerCSV()" title="Export Compliance Audit Trail as CSV" aria-label="Export Audit Trail CSV" style="font-size: 10px; padding: 4px 10px; border-radius: 6px; display: flex; align-items: center; gap: 4px;">
+                                <i class="fa-solid fa-download" aria-hidden="true"></i> CSV
                             </button>
                         </div>
                     </div>
 
                     <div class="pipelines-table-container">
-                        <table class="pipeline-table-v3">
+                        <table class="pipeline-table-v3" role="table" aria-label="Recovery Pipelines Transactions">
+                            <caption class="sr-only">Live Recovery Pipeline Transactions and Compliance Tracking</caption>
                             <thead>
                                 <tr>
-                                    <th>CUSTOMER / ID</th>
-                                    <th>AMOUNT</th>
-                                    <th>FAILURE DIAGNOSE</th>
-                                    <th>CONTACTS</th>
-                                    <th>STATUS STAGE</th>
-                                    <th>POLICY ADHERENCE</th>
+                                    <th scope="col">CUSTOMER / ID</th>
+                                    <th scope="col">AMOUNT</th>
+                                    <th scope="col">FAILURE DIAGNOSE</th>
+                                    <th scope="col">CONTACTS</th>
+                                    <th scope="col">STATUS STAGE</th>
+                                    <th scope="col">POLICY ADHERENCE</th>
                                 </tr>
                             </thead>
                             <tbody id="pipeline-body">
@@ -238,33 +259,33 @@
                         </div>
                         <div class="scorecard-metrics-grid">
                             <div class="compliance-progress-bar">
-                                <span class="compliance-label"><i class="fa-solid fa-user-shield"></i> Agent Compliance <strong>100%</strong></span>
-                                <div class="progress-track">
+                                <span class="compliance-label"><i class="fa-solid fa-user-shield" aria-hidden="true"></i> Agent Compliance <strong>100%</strong></span>
+                                <div class="progress-track" aria-hidden="true">
                                     <div class="progress-fill fill-green" style="width: 100%;"></div>
                                 </div>
                             </div>
                             <div class="revenue-recovered-badge">
-                                <span class="rev-val"><i class="fa-solid fa-chart-line"></i> Overall Recovered Revenue <strong>₹7.2K</strong></span>
+                                <span class="rev-val"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Overall Recovered Revenue <strong>₹7.2K</strong></span>
                             </div>
-                            <div class="scorecard-charts">
+                            <div class="scorecard-charts" aria-label="Recovery Performance Chart">
                                 <canvas id="scorecardLineChart" width="220" height="70"></canvas>
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
 
                 <!-- Column 3: Simulation Control & AI Agent Audit -->
-                <div class="grid-col col-audit">
+                <section class="grid-col col-audit" aria-label="Simulation Controls and Agent Reasoning Audit">
                     <!-- Simulation Control Card (Top Right) -->
                     <div class="simulation-control-card">
                         <h3>Simulation Control</h3>
                         <div class="simulation-btn-group">
-                            <button class="btn btn-primary btn-step-sim" onclick="stepEntityManual()"><i class="fa-solid fa-play"></i> Run Step-by-Step</button>
-                            <button class="btn btn-secondary btn-full-sim" onclick="openBatchModal()"><i class="fa-solid fa-rocket"></i> Full Batch (50+ records)</button>
+                            <button class="btn btn-primary btn-step-sim" onclick="stepEntityManual()" aria-label="Run Single Step Simulation"><i class="fa-solid fa-play" aria-hidden="true"></i> Run Step-by-Step</button>
+                            <button class="btn btn-secondary btn-full-sim" onclick="openBatchModal()" aria-label="Open Full Batch Simulator"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Full Batch (50+)</button>
                         </div>
                         <div class="override-selector-pane">
                             <label for="override-select">Performance Overrides:</label>
-                            <select id="override-select" onchange="changeOverride(this.value)">
+                            <select id="override-select" onchange="changeOverride(this.value)" aria-label="Select Performance Override Mode">
                                 <option value="normal">Normal Execution</option>
                                 <option value="induce_gateway_failure">Induce Gateway Failure</option>
                                 <option value="customer_opt_out">Customer Opt-Out</option>
@@ -274,12 +295,12 @@
                     </div>
 
                     <!-- AI Copilot Recommendation Card -->
-                    <div class="simulation-control-card copilot-card" id="copilot-card" style="display:none; border:1px solid rgba(59, 130, 246, 0.2); background: linear-gradient(135deg, rgba(30,41,59,0.85) 0%, rgba(15,23,42,0.95) 100%); margin-bottom: 15px;">
+                    <div class="simulation-control-card copilot-card" id="copilot-card" style="display:none; border:1px solid rgba(59, 130, 246, 0.2); background: linear-gradient(135deg, rgba(30,41,59,0.85) 0%, rgba(15,23,42,0.95) 100%); margin-bottom: 15px;" role="region" aria-label="AI Copilot Recommendations">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                            <h3 style="margin:0; display:flex; align-items:center; gap:8px; font-size:13px;"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--accent-glow);"></i> AI Copilot</h3>
+                            <h3 style="margin:0; display:flex; align-items:center; gap:8px; font-size:13px;"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--accent-glow);" aria-hidden="true"></i> AI Copilot</h3>
                             <span class="badge badge-risk" id="copilot-badge" style="background:rgba(59, 130, 246, 0.1); border-color:var(--accent-glow); color:var(--text-accent); font-size:10px;">Likelihood: 85%</span>
                         </div>
-                        <div class="progress-track" style="height:6px; background:#1e293b; border-radius:3px; overflow:hidden; margin-bottom:12px;">
+                        <div class="progress-track" style="height:6px; background:#1e293b; border-radius:3px; overflow:hidden; margin-bottom:12px;" aria-hidden="true">
                             <div class="progress-fill fill-green" id="copilot-bar" style="width: 85%; height:100%; transition: width 0.4s ease;"></div>
                         </div>
                         <p id="copilot-text" style="font-size:11px; color:var(--text-muted); line-height:1.4; margin-bottom:12px;">Analyzing transaction context...</p>
@@ -289,77 +310,77 @@
                     </div>
 
                     <!-- Visual Customer Dunning Journey Stepper -->
-                    <div class="customer-journey-stepper" id="journey-stepper-box" style="display:none; margin-bottom: 14px;">
+                    <div class="customer-journey-stepper" id="journey-stepper-box" style="display:none; margin-bottom: 14px;" role="region" aria-label="Customer Dunning Lifecycle Stepper">
                         <div class="journey-header">
-                            <span class="journey-label"><i class="fa-solid fa-route"></i> Dunning Lifecycle State</span>
+                            <span class="journey-label"><i class="fa-solid fa-route" aria-hidden="true"></i> Dunning Lifecycle State</span>
                             <span class="journey-status-pill" id="journey-status-tag">ACTIVE</span>
                         </div>
                         <div class="stepper-track">
                             <div class="step-node" id="step-node-1" title="Transaction Ingested">
-                                <div class="step-circle"><i class="fa-solid fa-file-import"></i></div>
+                                <div class="step-circle"><i class="fa-solid fa-file-import" aria-hidden="true"></i></div>
                                 <span class="step-text">Ingest</span>
                             </div>
-                            <div class="step-connector" id="conn-1"></div>
+                            <div class="step-connector" id="conn-1" aria-hidden="true"></div>
                             <div class="step-node" id="step-node-2" title="AI Root-Cause Diagnosis">
-                                <div class="step-circle"><i class="fa-solid fa-brain"></i></div>
+                                <div class="step-circle"><i class="fa-solid fa-brain" aria-hidden="true"></i></div>
                                 <span class="step-text">Diagnose</span>
                             </div>
-                            <div class="step-connector" id="conn-2"></div>
+                            <div class="step-connector" id="conn-2" aria-hidden="true"></div>
                             <div class="step-node" id="step-node-3" title="Multi-Channel Outreach">
-                                <div class="step-circle"><i class="fa-solid fa-paper-plane"></i></div>
+                                <div class="step-circle"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></div>
                                 <span class="step-text">Outreach</span>
                             </div>
-                            <div class="step-connector" id="conn-3"></div>
+                            <div class="step-connector" id="conn-3" aria-hidden="true"></div>
                             <div class="step-node" id="step-node-4" title="Customer Engagement & PTP">
-                                <div class="step-circle"><i class="fa-solid fa-comments"></i></div>
+                                <div class="step-circle"><i class="fa-solid fa-comments" aria-hidden="true"></i></div>
                                 <span class="step-text">Engage</span>
                             </div>
-                            <div class="step-connector" id="conn-4"></div>
+                            <div class="step-connector" id="conn-4" aria-hidden="true"></div>
                             <div class="step-node" id="step-node-5" title="Settled & Ledger Locked">
-                                <div class="step-circle"><i class="fa-solid fa-shield-halved"></i></div>
+                                <div class="step-circle"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></div>
                                 <span class="step-text">Settled</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Collapsible Reasoning Audit Accordion -->
-                    <div class="audit-accordion-section">
+                    <div class="audit-accordion-section" role="region" aria-label="AI Reasoning Diagnostic Tree">
                         <div class="card-title-header">
-                            <h3>AI Agent Reasoning Audit <span class="sup-text">[site: 1]</span></h3>
+                            <h3>AI Agent Reasoning Audit <span class="sup-text">[cite: 1]</span></h3>
                         </div>
 
                         <div class="accordion-container" id="accordion-root">
                             <!-- Accordion Placeholder -->
                             <div class="audit-placeholder" id="audit-empty-state">
-                                <i class="fa-solid fa-brain-circuit brain-icon"></i>
+                                <i class="fa-solid fa-brain-circuit brain-icon" aria-hidden="true"></i>
                                 <h3>Agent Evaluation Desk</h3>
                                 <p>Select any active case in the pipeline grid to trace the dynamic AI reasoning tree, policy checks, and Hinglish transcripts.</p>
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
             </div>
         </main>
     </div>
 
     <!-- Batch Simulator Modal -->
-    <div class="modal-overlay" id="batch-modal">
+    <div class="modal-overlay" id="batch-modal" role="dialog" aria-modal="true" aria-labelledby="batch-modal-title">
         <div class="modal-card">
             <div class="modal-header">
-                <h2>Batch Recovery Simulator (50+ Records)</h2>
-                <button class="close-modal" onclick="closeBatchModal()">&times;</button>
+                <h2 id="batch-modal-title">Batch Recovery Simulator (50+ Records)</h2>
+                <button class="close-modal" onclick="closeBatchModal()" aria-label="Close Batch Simulator Modal">&times;</button>
             </div>
             <div class="modal-body">
                 <p class="modal-desc">Simulate processing all failed payments, checkout drop-offs, and overdue invoices through the multi-stage AI Agent. Evaluates recovery rates, stopping compliance, and resolves cash collection loops.</p>
                 
                 <div class="simulation-trigger-pane" id="batch-trigger-view">
                     <button class="btn btn-primary btn-large" onclick="triggerBatchRecovery()">
-                        <i class="fa-solid fa-play-circle"></i> Start Batch Simulation Run
+                        <i class="fa-solid fa-play-circle" aria-hidden="true"></i> Start Batch Simulation Run
                     </button>
                 </div>
 
-                <div class="simulation-loading" id="batch-loading-view" style="display: none;">
-                    <i class="fa-solid fa-circle-notch fa-spin spinner"></i>
+                <div class="simulation-loading" id="batch-loading-view" style="display: none;" aria-live="polite">
+                    <i class="fa-solid fa-circle-notch fa-spin spinner" aria-hidden="true"></i>
                     <p>Executing agent state machine, parsing customer responses, checking compliance gates...</p>
                 </div>
 
@@ -406,30 +427,30 @@
     </div>
 
     <!-- User Profile Modal -->
-    <div class="modal-overlay" id="profile-modal">
+    <div class="modal-overlay" id="profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
         <div class="modal-card" style="max-width: 440px;">
             <div class="modal-header">
-                <h2>User Profile</h2>
-                <button class="close-modal" onclick="closeProfileModal()">&times;</button>
+                <h2 id="profile-modal-title">User Profile</h2>
+                <button class="close-modal" onclick="closeProfileModal()" aria-label="Close Profile Modal">&times;</button>
             </div>
             <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px; align-items: center; padding-top: 12px;">
                 <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary-grad); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 16px var(--primary-glow);">
-                    <i class="fa-solid fa-user-tie" style="font-size: 36px; color: white;"></i>
+                    <i class="fa-solid fa-user-tie" style="font-size: 36px; color: white;" aria-hidden="true"></i>
                 </div>
                 <div style="text-align: center;">
                     <h3 style="font-size: 18px; color: var(--text-main);">KGupta171025</h3>
                     <p style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">Senior Full Stack Engineer (Admin)</p>
                 </div>
                 
-                <div style="width: 100%; border-top: 1px solid var(--card-border); padding-top: 16px; margin-top: 8px;">
+                <div style="width: 100%; border-top: 1px solid var(--border-subtle); padding-top: 16px; margin-top: 8px;">
                     <div style="display: flex; flex-direction: column; gap: 12px;">
                         <div style="display: flex; justify-content: space-between; font-size: 12px;">
                             <span style="color: var(--text-muted);">Security Level</span>
-                            <span style="color: var(--success); font-weight: 600;"><i class="fa-solid fa-shield-halved"></i> Root Administrator</span>
+                            <span style="color: var(--success); font-weight: 600;"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Root Administrator</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; font-size: 12px;">
                             <span style="color: var(--text-muted);">PII Compliance</span>
-                            <span style="color: var(--success); font-weight: 600;"><i class="fa-solid fa-lock"></i> Masking Active (A+)</span>
+                            <span style="color: var(--success); font-weight: 600;"><i class="fa-solid fa-lock" aria-hidden="true"></i> Masking Active (A+)</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; font-size: 12px;">
                             <span style="color: var(--text-muted);">IP Rate Limiter</span>
@@ -437,7 +458,7 @@
                         </div>
                         <div style="display: flex; justify-content: space-between; font-size: 12px; align-items: center;">
                             <span style="color: var(--text-muted);">System Backup</span>
-                            <button onclick="triggerProfileBackup()" class="btn btn-secondary" style="font-size: 9px; padding: 4px 8px; border-radius: 4px;"><i class="fa-solid fa-cloud-arrow-up"></i> Backup Now</button>
+                            <button onclick="triggerProfileBackup()" class="btn btn-secondary" style="font-size: 9px; padding: 4px 8px; border-radius: 4px;"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Backup Now</button>
                         </div>
                     </div>
                 </div>
@@ -449,14 +470,14 @@
     </div>
 
     <!-- Notifications Modal -->
-    <div class="modal-overlay" id="notifications-modal">
+    <div class="modal-overlay" id="notifications-modal" role="dialog" aria-modal="true" aria-labelledby="notifications-modal-title">
         <div class="modal-card" style="max-width: 500px;">
             <div class="modal-header">
-                <h2>Notifications Log</h2>
-                <button class="close-modal" onclick="closeNotificationsModal()">&times;</button>
+                <h2 id="notifications-modal-title">Notifications Log</h2>
+                <button class="close-modal" onclick="closeNotificationsModal()" aria-label="Close Notifications Modal">&times;</button>
             </div>
             <div class="modal-body" style="padding-top: 12px;">
-                <div id="notifications-list">
+                <div id="notifications-list" role="feed" aria-label="System Notifications Feed">
                     <!-- Dynamically populated -->
                 </div>
             </div>
@@ -467,33 +488,33 @@
     </div>
 
     <!-- System Settings Modal -->
-    <div class="modal-overlay" id="settings-modal">
+    <div class="modal-overlay" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
         <div class="modal-card" style="max-width: 540px;">
             <div class="modal-header">
-                <h2>System Preferences</h2>
-                <button class="close-modal" onclick="closeSettingsModal()">&times;</button>
+                <h2 id="settings-modal-title">System Preferences</h2>
+                <button class="close-modal" onclick="closeSettingsModal()" aria-label="Close Settings Modal">&times;</button>
             </div>
             <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px; padding-top: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
                     <div>
                         <h4 style="font-size: 13px; color: var(--text-main);">Automated Recovery Strategy</h4>
                         <p style="font-size: 10px; color: var(--text-muted);">Enables autonomous dunning sequence routing via AI Agent.</p>
                     </div>
-                    <label class="switch-toggle">
-                        <input type="checkbox" id="setting-auto-recovery" checked>
-                        <span class="slider-toggle-round"></span>
+                    <label class="switch">
+                        <input type="checkbox" id="setting-auto-recovery" checked aria-label="Enable Automated Recovery Strategy">
+                        <span class="switch-slider"></span>
                     </label>
                 </div>
                 
-                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
                     <div>
                         <h4 style="font-size: 13px; color: var(--text-main);">Maximum Outreach Attempts</h4>
                         <p style="font-size: 10px; color: var(--text-muted);">Halt collections campaigns if this outreach limit is reached.</p>
                     </div>
-                    <input type="number" id="setting-max-outreach" value="3" min="1" max="10" style="width: 60px; background: #090d16; color: var(--text-main); border: 1px solid var(--card-border); border-radius: 6px; padding: 6px; font-size: 12px; text-align: center; outline: none;">
+                    <input type="number" id="setting-max-outreach" value="3" min="1" max="10" style="width: 60px; background: #090d16; color: var(--text-main); border: 1px solid var(--border-card); border-radius: 6px; padding: 6px; font-size: 12px; text-align: center; outline: none;" aria-label="Maximum Outreach Attempts Count">
                 </div>
 
-                <div style="display: flex; flex-direction: column; gap: 8px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+                <div style="display: flex; flex-direction: column; gap: 8px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h4 style="font-size: 13px; color: var(--text-main);">AI Diagnosis Confidence Threshold</h4>
@@ -501,27 +522,27 @@
                         </div>
                         <span id="val-setting-threshold" style="font-size: 12px; font-weight: 600; color: var(--primary);">0.85</span>
                     </div>
-                    <input type="range" id="setting-threshold" min="0.5" max="1.0" step="0.05" value="0.85" oninput="document.getElementById('val-setting-threshold').innerText=this.value" style="width: 100%; cursor: pointer;">
+                    <input type="range" id="setting-threshold" min="0.5" max="1.0" step="0.05" value="0.85" oninput="document.getElementById('val-setting-threshold').innerText=this.value" style="width: 100%; cursor: pointer;" aria-label="AI Confidence Threshold">
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
                     <div>
                         <h4 style="font-size: 13px; color: var(--text-main);">PII Compliance Strategy</h4>
                         <p style="font-size: 10px; color: var(--text-muted);">Select method of data sanitization for downstream pipelines.</p>
                     </div>
-                    <select id="setting-pii-strategy">
+                    <select id="setting-pii-strategy" aria-label="PII Compliance Strategy">
                         <option value="mask">Standard Masking (A+)</option>
                         <option value="redact">Full Redaction</option>
                         <option value="plain">Plain Text (No Masking)</option>
                     </select>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
                     <div>
                         <h4 style="font-size: 13px; color: var(--text-main);">Auto-backup Interval</h4>
                         <p style="font-size: 10px; color: var(--text-muted);">Trigger automated database backup checkpoints.</p>
                     </div>
-                    <select id="setting-backup-interval">
+                    <select id="setting-backup-interval" aria-label="Auto-backup Interval">
                         <option value="hourly">Every Hour</option>
                         <option value="daily" selected>Every Day</option>
                         <option value="weekly">Every Week</option>
@@ -530,27 +551,27 @@
             </div>
             <div class="modal-footer" style="padding-top: 12px; display: flex; justify-content: flex-end; gap: 10px;">
                 <button class="btn btn-secondary" onclick="closeSettingsModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveSystemSettings()"><i class="fa-solid fa-circle-check"></i> Save Preferences</button>
+                <button class="btn btn-primary" onclick="saveSystemSettings()"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Save Preferences</button>
             </div>
         </div>
     </div>
 
     <!-- Secret Admin Panel Modal -->
-    <div class="modal-overlay" id="secret-admin-modal">
+    <div class="modal-overlay" id="secret-admin-modal" role="dialog" aria-modal="true" aria-labelledby="secret-modal-title">
         <!-- View 1: Auth Screen -->
         <div class="modal-card terminal-modal-card" id="secret-auth-card" style="max-width: 400px; display: block;">
             <div class="terminal-header">
-                <h2>[ROOT SECURITY GATE]</h2>
-                <button class="terminal-close" onclick="closeSecretPanel()">&times;</button>
+                <h2 id="secret-modal-title">[ROOT SECURITY GATE]</h2>
+                <button class="terminal-close" onclick="closeSecretPanel()" aria-label="Close Root Gate">&times;</button>
             </div>
             <div class="terminal-body" style="display: flex; flex-direction: column; gap: 14px;">
                 <p style="color: #00ff66; font-size: 11px; margin-bottom: 8px;">UNAUTHORIZED ACCESS DETECTED. PROVIDE SECURITY CREDENTIALS TO INITIALIZE SYSTEM PANEL.</p>
                 <div>
-                    <label>Admin Identity</label>
+                    <label for="secret-id-input" style="color:#00ff66; font-size:11px;">Admin Identity</label>
                     <input type="text" id="secret-id-input" class="terminal-input" placeholder="root_uid" autocomplete="off">
                 </div>
                 <div>
-                    <label>Security Key</label>
+                    <label for="secret-pass-input" style="color:#00ff66; font-size:11px;">Security Key</label>
                     <input type="password" id="secret-pass-input" class="terminal-input" placeholder="**********">
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
@@ -564,17 +585,17 @@
         <div class="modal-card terminal-modal-card" id="secret-console-card" style="max-width: 600px; display: none;">
             <div class="terminal-header">
                 <h2>[ROOT@RAZORRECOVERY:~] # SYSTEM CONTROL PANEL</h2>
-                <button class="terminal-close" onclick="closeSecretPanel()">&times;</button>
+                <button class="terminal-close" onclick="closeSecretPanel()" aria-label="Close Console">&times;</button>
             </div>
             <div class="terminal-body">
-                <div class="terminal-grid">
+                <div class="terminal-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 12px;">
                     <!-- Column A: Gateway Overrides -->
                     <div style="display: flex; flex-direction: column; gap: 10px;">
                         <h4 style="color: #00ff66; font-size: 12px; margin-bottom: 6px; border-bottom: 1px solid rgba(0,255,102,0.2); padding-bottom: 4px;">Gateway Status Overrides</h4>
                         
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
                             <span>HDFC NODE</span>
-                            <select id="secret-override-hdfc" class="terminal-select" style="width: 110px;" onchange="applySecretGatewayOverride('HDFC', this.value)">
+                            <select id="secret-override-hdfc" class="terminal-select" style="width: 110px;" onchange="applySecretGatewayOverride('HDFC', this.value)" aria-label="Override HDFC Gateway">
                                 <option value="stable">Stable</option>
                                 <option value="degraded">Degraded</option>
                                 <option value="jitter">Jitter</option>
@@ -583,7 +604,7 @@
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
                             <span>ICICI NODE</span>
-                            <select id="secret-override-icici" class="terminal-select" style="width: 110px;" onchange="applySecretGatewayOverride('ICICI', this.value)">
+                            <select id="secret-override-icici" class="terminal-select" style="width: 110px;" onchange="applySecretGatewayOverride('ICICI', this.value)" aria-label="Override ICICI Gateway">
                                 <option value="stable">Stable</option>
                                 <option value="degraded">Degraded</option>
                                 <option value="jitter">Jitter</option>
@@ -592,7 +613,7 @@
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
                             <span>SBI NODE</span>
-                            <select id="secret-override-sbi" class="terminal-select" style="width: 110px;" onchange="applySecretGatewayOverride('SBI', this.value)">
+                            <select id="secret-override-sbi" class="terminal-select" style="width: 110px;" onchange="applySecretGatewayOverride('SBI', this.value)" aria-label="Override SBI Gateway">
                                 <option value="stable">Stable</option>
                                 <option value="degraded">Degraded</option>
                                 <option value="jitter">Jitter</option>
@@ -601,7 +622,7 @@
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
                             <span>UPI NODE</span>
-                            <select id="secret-override-upi" class="terminal-select" style="width: 110px;" onchange="applySecretGatewayOverride('UPI', this.value)">
+                            <select id="secret-override-upi" class="terminal-select" style="width: 110px;" onchange="applySecretGatewayOverride('UPI', this.value)" aria-label="Override UPI Gateway">
                                 <option value="stable">Stable</option>
                                 <option value="degraded">Degraded</option>
                                 <option value="jitter">Jitter</option>
@@ -614,16 +635,16 @@
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <h4 style="color: #00ff66; font-size: 12px; margin-bottom: 6px; border-bottom: 1px solid rgba(0,255,102,0.2); padding-bottom: 4px;">Inject Mock Outage Case</h4>
                         <div>
-                            <input type="text" id="secret-inject-name" class="terminal-input" placeholder="Customer Name" style="padding: 6px; font-size: 11px; margin-bottom: 6px;">
-                            <input type="text" id="secret-inject-email" class="terminal-input" placeholder="email@example.com" style="padding: 6px; font-size: 11px; margin-bottom: 6px;">
-                            <input type="number" id="secret-inject-amount" class="terminal-input" placeholder="Amount (INR)" style="padding: 6px; font-size: 11px; margin-bottom: 6px;">
-                            <select id="secret-inject-bank" class="terminal-select" style="padding: 6px; font-size: 11px; margin-bottom: 6px;">
+                            <input type="text" id="secret-inject-name" class="terminal-input" placeholder="Customer Name" style="padding: 6px; font-size: 11px; margin-bottom: 6px;" aria-label="Mock Customer Name">
+                            <input type="text" id="secret-inject-email" class="terminal-input" placeholder="email@example.com" style="padding: 6px; font-size: 11px; margin-bottom: 6px;" aria-label="Mock Customer Email">
+                            <input type="number" id="secret-inject-amount" class="terminal-input" placeholder="Amount (INR)" style="padding: 6px; font-size: 11px; margin-bottom: 6px;" aria-label="Mock Transaction Amount">
+                            <select id="secret-inject-bank" class="terminal-select" style="padding: 6px; font-size: 11px; margin-bottom: 6px; width:100%;" aria-label="Mock Bank Gateway">
                                 <option value="HDFC">HDFC Bank</option>
                                 <option value="ICICI">ICICI Bank</option>
                                 <option value="SBI">State Bank of India</option>
                                 <option value="UPI">UPI Gateway</option>
                             </select>
-                            <button class="terminal-btn" style="width: 100%; font-size: 10px; padding: 6px;" onclick="triggerSecretCaseInjection()"><i class="fa-solid fa-bolt"></i> Force Inject Failure</button>
+                            <button class="terminal-btn" style="width: 100%; font-size: 10px; padding: 6px;" onclick="triggerSecretCaseInjection()"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Force Inject Failure</button>
                         </div>
                     </div>
                 </div>
@@ -636,7 +657,7 @@ awaiting instructions...</div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(0,255,102,0.2); padding-top: 12px; margin-top: 8px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="font-size: 11px; font-weight: bold; color: #00ff66;">PII DECRYPTOR VIEWPORT</span>
-                        <span id="decryption-status-badge" style="font-size: 10px;">[INACTIVE]</span>
+                        <span id="decryption-status-badge" style="font-size: 10px; color: #00ff66;">[INACTIVE]</span>
                     </div>
                     <button class="terminal-btn" style="padding: 6px 12px; font-size: 10px;" id="btn-toggle-decryption" onclick="toggleSecretPIIDecryption()">Decrypt PII Stream</button>
                 </div>
@@ -645,22 +666,22 @@ awaiting instructions...</div>
     </div>
 
     <!-- AI Strategy & ROI Playground Modal -->
-    <div class="modal-overlay" id="roi-modal">
+    <div class="modal-overlay" id="roi-modal" role="dialog" aria-modal="true" aria-labelledby="roi-modal-title">
         <div class="modal-card" style="max-width: 620px;">
             <div class="modal-header">
-                <h2><i class="fa-solid fa-calculator" style="color:var(--accent-glow);"></i> AI Recovery ROI Calculator</h2>
-                <button class="close-modal" onclick="closeRoiModal()">&times;</button>
+                <h2 id="roi-modal-title"><i class="fa-solid fa-calculator" style="color:var(--accent-glow);" aria-hidden="true"></i> AI Recovery ROI Calculator</h2>
+                <button class="close-modal" onclick="closeRoiModal()" aria-label="Close ROI Calculator">&times;</button>
             </div>
             <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px; padding-top: 12px;">
                 <p class="modal-desc">Simulate bottom-line revenue recovery for your merchant business based on transaction volume, failure rates, and AI dunning sequence efficiency.</p>
                 
-                <div class="roi-inputs-grid" style="display: flex; flex-direction: column; gap: 14px; background: rgba(255,255,255,0.02); padding: 14px; border-radius: 10px; border: 1px solid var(--card-border);">
+                <div class="roi-inputs-grid" style="display: flex; flex-direction: column; gap: 14px; background: rgba(255,255,255,0.02); padding: 14px; border-radius: 10px; border: 1px solid var(--border-subtle);">
                     <div>
                         <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
                             <span>Monthly Gross Transaction Volume (GTV):</span>
                             <strong id="roi-gtv-label" style="color:var(--accent-glow);">₹1,00,00,000 (1 Cr)</strong>
                         </div>
-                        <input type="range" id="roi-gtv-slider" min="1000000" max="500000000" step="500000" value="10000000" oninput="calculateROI()" style="width: 100%; cursor: pointer;">
+                        <input type="range" id="roi-gtv-slider" min="1000000" max="500000000" step="500000" value="10000000" oninput="calculateROI()" style="width: 100%; cursor: pointer;" aria-label="Monthly GTV Slider">
                     </div>
 
                     <div>
@@ -668,7 +689,7 @@ awaiting instructions...</div>
                             <span>Payment & Mandate Failure Rate:</span>
                             <strong id="roi-failure-label" style="color:var(--danger);">15%</strong>
                         </div>
-                        <input type="range" id="roi-failure-slider" min="5" max="35" step="1" value="15" oninput="calculateROI()" style="width: 100%; cursor: pointer;">
+                        <input type="range" id="roi-failure-slider" min="5" max="35" step="1" value="15" oninput="calculateROI()" style="width: 100%; cursor: pointer;" aria-label="Payment Failure Rate Slider">
                     </div>
 
                     <div>
@@ -676,7 +697,7 @@ awaiting instructions...</div>
                             <span>RazorRecovery AI Recovery Lift:</span>
                             <strong id="roi-lift-label" style="color:var(--success);">65%</strong>
                         </div>
-                        <input type="range" id="roi-lift-slider" min="30" max="85" step="5" value="65" oninput="calculateROI()" style="width: 100%; cursor: pointer;">
+                        <input type="range" id="roi-lift-slider" min="30" max="85" step="5" value="65" oninput="calculateROI()" style="width: 100%; cursor: pointer;" aria-label="AI Recovery Lift Slider">
                     </div>
                 </div>
 
@@ -696,7 +717,7 @@ awaiting instructions...</div>
                 </div>
 
                 <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; border-left: 3px solid var(--success);">
-                    <i class="fa-solid fa-circle-check" style="color:var(--success); margin-right: 4px;"></i>
+                    <i class="fa-solid fa-circle-check" style="color:var(--success); margin-right: 4px;" aria-hidden="true"></i>
                     <strong>Compliant Projection:</strong> Incorporates 3-contact stopping rule limits, quiet hours gating, and discount incentive elasticity without customer fatigue.
                 </div>
             </div>
@@ -707,40 +728,40 @@ awaiting instructions...</div>
     </div>
 
     <!-- Compliance & Security Certificate Modal -->
-    <div class="modal-overlay" id="certificate-modal">
+    <div class="modal-overlay" id="certificate-modal" role="dialog" aria-modal="true" aria-labelledby="certificate-modal-title">
         <div class="modal-card" style="max-width: 540px;">
             <div class="modal-header">
-                <h2><i class="fa-solid fa-certificate" style="color:var(--success);"></i> Audit Ledger Certificate</h2>
-                <button class="close-modal" onclick="closeCertificateModal()">&times;</button>
+                <h2 id="certificate-modal-title"><i class="fa-solid fa-certificate" style="color:var(--success);" aria-hidden="true"></i> Audit Ledger Certificate</h2>
+                <button class="close-modal" onclick="closeCertificateModal()" aria-label="Close Certificate Modal">&times;</button>
             </div>
             <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px; padding-top: 12px;">
                 <div style="background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(15,23,42,0.9) 100%); border: 1px solid rgba(16,185,129,0.3); border-radius: 12px; padding: 16px; text-align: center;">
-                    <i class="fa-solid fa-shield-halved" style="font-size: 36px; color: var(--success); margin-bottom: 8px;"></i>
+                    <i class="fa-solid fa-shield-halved" style="font-size: 36px; color: var(--success); margin-bottom: 8px;" aria-hidden="true"></i>
                     <h3 style="font-size: 16px; color: var(--text-main); margin-bottom: 4px;">Cryptographic Ledger Verified</h3>
                     <p style="font-size: 11px; color: var(--text-muted);">All agentic outreach records and dunning attempts are cryptographically signed with SHA-256 hash chaining.</p>
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 10px; font-size: 12px;">
-                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--card-border); padding-bottom: 6px;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 6px;">
                         <span style="color:var(--text-muted);">Ledger Root Hash</span>
                         <code style="color:var(--success); font-size: 10px;">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</code>
                     </div>
-                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--card-border); padding-bottom: 6px;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 6px;">
                         <span style="color:var(--text-muted);">Stopping Rules Audit</span>
-                        <span style="color:var(--success); font-weight:600;"><i class="fa-solid fa-check-circle"></i> Strict (Max 3 Contacts)</span>
+                        <span style="color:var(--success); font-weight:600;"><i class="fa-solid fa-check-circle" aria-hidden="true"></i> Strict (Max 3 Contacts)</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--card-border); padding-bottom: 6px;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 6px;">
                         <span style="color:var(--text-muted);">Quiet Hours Adherence</span>
-                        <span style="color:var(--success); font-weight:600;"><i class="fa-solid fa-check-circle"></i> 21:00 - 09:00 IST Blackout</span>
+                        <span style="color:var(--success); font-weight:600;"><i class="fa-solid fa-check-circle" aria-hidden="true"></i> 21:00 - 09:00 IST Blackout</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--card-border); padding-bottom: 6px;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 6px;">
                         <span style="color:var(--text-muted);">PII Protection Grade</span>
-                        <span style="color:var(--success); font-weight:600;"><i class="fa-solid fa-check-circle"></i> A+ (Masked Viewport)</span>
+                        <span style="color:var(--success); font-weight:600;"><i class="fa-solid fa-check-circle" aria-hidden="true"></i> A+ (Masked Viewport)</span>
                     </div>
                 </div>
 
                 <button class="btn btn-primary" onclick="downloadSecurityCertificate()" style="width: 100%; margin-top: 6px; padding: 10px;">
-                    <i class="fa-solid fa-file-arrow-down"></i> Download JSON Audit Certificate
+                    <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i> Download JSON Audit Certificate
                 </button>
             </div>
             <div class="modal-footer" style="padding-top: 12px;">
@@ -750,40 +771,40 @@ awaiting instructions...</div>
     </div>
 
     <!-- Keyboard Shortcuts Modal -->
-    <div class="modal-overlay" id="shortcuts-modal">
+    <div class="modal-overlay" id="shortcuts-modal" role="dialog" aria-modal="true" aria-labelledby="shortcuts-modal-title">
         <div class="modal-card" style="max-width: 460px;">
             <div class="modal-header">
-                <h2><i class="fa-solid fa-keyboard" style="color:var(--accent-glow);"></i> Keyboard Shortcuts</h2>
-                <button class="close-modal" onclick="closeKeyboardShortcutsModal()">&times;</button>
+                <h2 id="shortcuts-modal-title"><i class="fa-solid fa-keyboard" style="color:var(--accent-glow);" aria-hidden="true"></i> Keyboard Shortcuts</h2>
+                <button class="close-modal" onclick="closeKeyboardShortcutsModal()" aria-label="Close Shortcuts Modal">&times;</button>
             </div>
             <div class="modal-body" style="display: flex; flex-direction: column; gap: 10px; padding-top: 12px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
                     <span style="font-size: 12px; color: var(--text-main);">Run Step-by-Step Simulation</span>
-                    <kbd style="background:#090d16; border:1px solid var(--card-border); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">Space</kbd>
+                    <kbd style="background:#090d16; border:1px solid var(--border-card); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">Space</kbd>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
                     <span style="font-size: 12px; color: var(--text-main);">Open Full Batch Simulator (50+)</span>
-                    <kbd style="background:#090d16; border:1px solid var(--card-border); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">B</kbd>
+                    <kbd style="background:#090d16; border:1px solid var(--border-card); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">B</kbd>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
                     <span style="font-size: 12px; color: var(--text-main);">Open AI Strategy / ROI Calculator</span>
-                    <kbd style="background:#090d16; border:1px solid var(--card-border); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">C</kbd>
+                    <kbd style="background:#090d16; border:1px solid var(--border-card); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">C</kbd>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
                     <span style="font-size: 12px; color: var(--text-main);">Focus Global AI Copilot Search</span>
-                    <kbd style="background:#090d16; border:1px solid var(--card-border); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">/</kbd>
+                    <kbd style="background:#090d16; border:1px solid var(--border-card); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">/</kbd>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
                     <span style="font-size: 12px; color: var(--text-main);">Export Audit Ledger CSV</span>
-                    <kbd style="background:#090d16; border:1px solid var(--card-border); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">E</kbd>
+                    <kbd style="background:#090d16; border:1px solid var(--border-card); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">E</kbd>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
                     <span style="font-size: 12px; color: var(--text-main);">Reset & Seed Database</span>
-                    <kbd style="background:#090d16; border:1px solid var(--card-border); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">R</kbd>
+                    <kbd style="background:#090d16; border:1px solid var(--border-card); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">R</kbd>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
                     <span style="font-size: 12px; color: var(--text-main);">Secret Admin Control Console</span>
-                    <kbd style="background:#090d16; border:1px solid var(--card-border); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">M</kbd>
+                    <kbd style="background:#090d16; border:1px solid var(--border-card); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">M</kbd>
                 </div>
             </div>
             <div class="modal-footer" style="padding-top: 12px;">
@@ -793,13 +814,13 @@ awaiting instructions...</div>
     </div>
 
     <!-- Floating Keyboard Helper Pill -->
-    <div class="keyboard-helper-pill" onclick="openKeyboardShortcutsModal()" title="View Keyboard Shortcuts (Press ?)">
-        <i class="fa-solid fa-keyboard"></i> <span>Shortcuts (<strong>?</strong>)</span>
+    <div class="keyboard-helper-pill" onclick="openKeyboardShortcutsModal()" role="button" tabindex="0" title="View Keyboard Shortcuts (Press ?)" aria-label="Open Keyboard Shortcuts Modal">
+        <i class="fa-solid fa-keyboard" aria-hidden="true"></i> <span>Shortcuts (<strong>?</strong>)</span>
     </div>
 
-    <!-- Notification Toast -->
-    <div class="toast" id="toast"></div>
+    <!-- Accessible Notification Toast -->
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="app.js?v=5"></script>
+    <script src="app.js?v=6"></script>
 </body>
 </html>

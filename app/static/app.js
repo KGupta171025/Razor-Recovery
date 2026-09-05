@@ -1990,7 +1990,25 @@ function closeAllModals() {
 }
 
 function initKeyboardShortcuts() {
+    // Backdrop click dismiss for all modals
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove('open');
+            }
+        });
+    });
+
+    // Enter / Space key listeners for accessible tabindex="0" items
     document.addEventListener('keydown', (e) => {
+        if (e.target && e.target.getAttribute('tabindex') === '0' && (e.key === 'Enter' || e.key === ' ')) {
+            if (!['INPUT', 'TEXTAREA', 'BUTTON', 'SELECT', 'A'].includes(e.target.tagName)) {
+                e.preventDefault();
+                e.target.click();
+                return;
+            }
+        }
+
         if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
             if (e.key === 'Escape') {
                 document.activeElement.blur();
@@ -2023,3 +2041,4 @@ function initKeyboardShortcuts() {
         }
     });
 }
+
