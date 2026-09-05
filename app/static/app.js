@@ -484,7 +484,7 @@ function initCanvasBackground() {
         draw() {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(59, 130, 246, 0.25)';
+            ctx.fillStyle = 'rgba(0, 210, 255, 0.25)';
             ctx.fill();
         }
     }
@@ -504,7 +504,7 @@ function initCanvasBackground() {
                     ctx.beginPath();
                     ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = `rgba(59, 130, 246, ${0.1 * (1 - dist / 180)})`;
+                    ctx.strokeStyle = `rgba(0, 210, 255, ${0.09 * (1 - dist / 180)})`;
                     ctx.lineWidth = 0.8;
                     ctx.stroke();
                 }
@@ -1319,8 +1319,8 @@ function initScorecardChart() {
                 {
                     label: 'Revenue at Risk',
                     data: [19.0, 16.5, 14.2, 11.8],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                    borderColor: '#00d2ff',
+                    backgroundColor: 'rgba(0, 210, 255, 0.05)',
                     borderWidth: 2,
                     tension: 0.3,
                     fill: true
@@ -1334,7 +1334,7 @@ function initScorecardChart() {
                 legend: { display: false }
             },
             scales: {
-                x: { display: true, grid: { display: false }, ticks: { color: '#64748b', font: { size: 8 } } },
+                x: { display: true, grid: { display: false }, ticks: { color: '#64748b', font: { size: 8, family: 'JetBrains Mono, sans-serif' } } },
                 y: { display: false }
             }
         }
@@ -1358,7 +1358,7 @@ function drawBatchCharts(recovered, failed, stopped) {
             labels: ['Recovered', 'In Progress', 'Stopped'],
             datasets: [{
                 data: [recovered, failed, stopped],
-                backgroundColor: ['#10b981', '#3b82f6', '#ef4444'],
+                backgroundColor: ['#10b981', '#00d2ff', '#ef4444'],
                 borderWidth: 0
             }]
         },

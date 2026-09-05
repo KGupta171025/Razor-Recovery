@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <meta name="description" content="RazorRecovery AI — Enterprise Autonomous Revenue Recovery, Dunning Orchestrator & Payment Failure Resolution Engine.">
-    <meta name="theme-color" content="#070b14">
+    <meta name="theme-color" content="#080b11">
     <meta property="og:title" content="RazorRecovery AI v3 — Unified Command Center">
     <meta property="og:description" content="Autonomous Agentic Revenue Recovery & Dunning Engine for Razorpay AI Buildathon (Track 3).">
     <meta property="og:type" content="website">
@@ -22,10 +22,10 @@
     
     <title>RazorRecovery AI v3 — Unified Command Center</title>
     
-    <!-- Google Fonts: Inter & Outfit -->
+    <!-- Google Fonts: Plus Jakarta Sans, Inter, Outfit & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- FontAwesome for Enterprise Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -33,7 +33,7 @@
     <!-- Chart.js for Recovery Visualizations -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <link rel="stylesheet" href="app/static/styles.css?v=6">
+    <link rel="stylesheet" href="app/static/styles.css?v=7">
     <link rel="icon" type="image/png" href="https://razorpay.com/favicon.png">
 </head>
 <body>
@@ -49,7 +49,7 @@
             <div class="logo-area" ondblclick="openSecretPanel()" role="button" tabindex="0" title="Double click or press M for Root Console" aria-label="RazorRecovery Logo - Double click for Root Console">
                 <svg class="logo-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path d="M14.26 10.098L3.389 17.166 1.564 24h9.008l3.688-13.902Z" fill="#2d3d54" />
-                    <path d="M22.436 0l-11.91 7.773-1.174 4.276 6.625-4.297L11.65 24h4.391l6.395-24z" fill="#3395ff" />
+                    <path d="M22.436 0l-11.91 7.773-1.174 4.276 6.625-4.297L11.65 24h4.391l6.395-24z" fill="#00d2ff" />
                 </svg>
                 <div class="logo-text">
                     <span class="logo-title">RazorRecovery</span>
@@ -305,12 +305,12 @@
                     </div>
 
                     <!-- AI Copilot Recommendation Card -->
-                    <div class="simulation-control-card copilot-card" id="copilot-card" style="display:none; border:1px solid rgba(59, 130, 246, 0.2); background: linear-gradient(135deg, rgba(30,41,59,0.85) 0%, rgba(15,23,42,0.95) 100%); margin-bottom: 15px;" role="region" aria-label="AI Copilot Recommendations">
+                    <div class="simulation-control-card copilot-card" id="copilot-card" style="display:none; border:1px solid rgba(0, 210, 255, 0.25); background: linear-gradient(135deg, rgba(13,18,30,0.92) 0%, rgba(8,11,17,0.98) 100%); margin-bottom: 15px;" role="region" aria-label="AI Copilot Recommendations">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                             <h3 style="margin:0; display:flex; align-items:center; gap:8px; font-size:13px;"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--accent-glow);" aria-hidden="true"></i> AI Copilot</h3>
-                            <span class="badge badge-risk" id="copilot-badge" style="background:rgba(59, 130, 246, 0.1); border-color:var(--accent-glow); color:var(--text-accent); font-size:10px;">Likelihood: 85%</span>
+                            <span class="badge badge-risk" id="copilot-badge" style="background:rgba(0, 210, 255, 0.1); border-color:var(--accent-glow); color:var(--text-accent); font-size:10px;">Likelihood: 85%</span>
                         </div>
-                        <div class="progress-track" style="height:6px; background:#1e293b; border-radius:3px; overflow:hidden; margin-bottom:12px;" aria-hidden="true">
+                        <div class="progress-track" style="height:6px; background:#111726; border-radius:3px; overflow:hidden; margin-bottom:12px;" aria-hidden="true">
                             <div class="progress-fill fill-green" id="copilot-bar" style="width: 85%; height:100%; transition: width 0.4s ease;"></div>
                         </div>
                         <p id="copilot-text" style="font-size:11px; color:var(--text-muted); line-height:1.4; margin-bottom:12px;">Analyzing transaction context...</p>
@@ -444,7 +444,7 @@
                 <button class="close-modal" onclick="closeProfileModal()" aria-label="Close Profile Modal">&times;</button>
             </div>
             <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px; align-items: center; padding-top: 12px;">
-                <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary-grad); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 16px var(--primary-glow);">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary-grad); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px var(--primary-glow);">
                     <i class="fa-solid fa-user-tie" style="font-size: 36px; color: white;" aria-hidden="true"></i>
                 </div>
                 <div style="text-align: center;">
@@ -464,7 +464,7 @@
                         </div>
                         <div style="display: flex; justify-content: space-between; font-size: 12px;">
                             <span style="color: var(--text-muted);">IP Rate Limiter</span>
-                            <span style="color: var(--text-main); font-weight: 600;">100 requests/min</span>
+                            <span style="color: var(--text-main); font-weight: 600; font-family: var(--font-mono);">100 req/min</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; font-size: 12px; align-items: center;">
                             <span style="color: var(--text-muted);">System Backup</span>
@@ -521,7 +521,7 @@
                         <h4 style="font-size: 13px; color: var(--text-main);">Maximum Outreach Attempts</h4>
                         <p style="font-size: 10px; color: var(--text-muted);">Halt collections campaigns if this outreach limit is reached.</p>
                     </div>
-                    <input type="number" id="setting-max-outreach" value="3" min="1" max="10" style="width: 60px; background: #090d16; color: var(--text-main); border: 1px solid var(--border-card); border-radius: 6px; padding: 6px; font-size: 12px; text-align: center; outline: none;" aria-label="Maximum Outreach Attempts Count">
+                    <input type="number" id="setting-max-outreach" value="3" min="1" max="10" style="width: 60px; background: #080b11; color: var(--text-main); border: 1px solid var(--border-card); border-radius: 6px; padding: 6px; font-size: 12px; text-align: center; outline: none; font-family: var(--font-mono);" aria-label="Maximum Outreach Attempts Count">
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 8px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
@@ -530,7 +530,7 @@
                             <h4 style="font-size: 13px; color: var(--text-main);">AI Diagnosis Confidence Threshold</h4>
                             <p style="font-size: 10px; color: var(--text-muted);">Minimum confidence level required for automatic routing.</p>
                         </div>
-                        <span id="val-setting-threshold" style="font-size: 12px; font-weight: 600; color: var(--primary);">0.85</span>
+                        <span id="val-setting-threshold" style="font-size: 12px; font-weight: 600; color: var(--primary); font-family: var(--font-mono);">0.85</span>
                     </div>
                     <input type="range" id="setting-threshold" min="0.5" max="1.0" step="0.05" value="0.85" oninput="document.getElementById('val-setting-threshold').innerText=this.value" style="width: 100%; cursor: pointer;" aria-label="AI Confidence Threshold">
                 </div>
@@ -689,7 +689,7 @@ awaiting instructions...</div>
                     <div>
                         <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
                             <span>Monthly Gross Transaction Volume (GTV):</span>
-                            <strong id="roi-gtv-label" style="color:var(--accent-glow);">₹1,00,00,000 (1 Cr)</strong>
+                            <strong id="roi-gtv-label" style="color:var(--accent-glow); font-family: var(--font-mono);">₹1,00,00,000 (1 Cr)</strong>
                         </div>
                         <input type="range" id="roi-gtv-slider" min="1000000" max="500000000" step="500000" value="10000000" oninput="calculateROI()" style="width: 100%; cursor: pointer;" aria-label="Monthly GTV Slider">
                     </div>
@@ -697,7 +697,7 @@ awaiting instructions...</div>
                     <div>
                         <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
                             <span>Payment & Mandate Failure Rate:</span>
-                            <strong id="roi-failure-label" style="color:var(--danger);">15%</strong>
+                            <strong id="roi-failure-label" style="color:var(--danger); font-family: var(--font-mono);">15%</strong>
                         </div>
                         <input type="range" id="roi-failure-slider" min="5" max="35" step="1" value="15" oninput="calculateROI()" style="width: 100%; cursor: pointer;" aria-label="Payment Failure Rate Slider">
                     </div>
@@ -705,7 +705,7 @@ awaiting instructions...</div>
                     <div>
                         <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
                             <span>RazorRecovery AI Recovery Lift:</span>
-                            <strong id="roi-lift-label" style="color:var(--success);">65%</strong>
+                            <strong id="roi-lift-label" style="color:var(--success); font-family: var(--font-mono);">65%</strong>
                         </div>
                         <input type="range" id="roi-lift-slider" min="30" max="85" step="5" value="65" oninput="calculateROI()" style="width: 100%; cursor: pointer;" aria-label="AI Recovery Lift Slider">
                     </div>
@@ -716,7 +716,7 @@ awaiting instructions...</div>
                         <span class="res-label">Monthly Recovered</span>
                         <span class="res-val text-recovered" id="roi-monthly-recovered" style="font-size: 17px;">₹9,75,000</span>
                     </div>
-                    <div class="result-box" style="background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.25);">
+                    <div class="result-box" style="background: rgba(0,210,255,0.08); border-color: rgba(0,210,255,0.25);">
                         <span class="res-label">Annual Margin Saved</span>
                         <span class="res-val" id="roi-annual-recovered" style="font-size: 17px; color: var(--primary);">₹1.17 Cr</span>
                     </div>
@@ -745,7 +745,7 @@ awaiting instructions...</div>
                 <button class="close-modal" onclick="closeCertificateModal()" aria-label="Close Certificate Modal">&times;</button>
             </div>
             <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px; padding-top: 12px;">
-                <div style="background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(15,23,42,0.9) 100%); border: 1px solid rgba(16,185,129,0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                <div style="background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(13,18,30,0.9) 100%); border: 1px solid rgba(16,185,129,0.3); border-radius: 12px; padding: 16px; text-align: center;">
                     <i class="fa-solid fa-shield-halved" style="font-size: 36px; color: var(--success); margin-bottom: 8px;" aria-hidden="true"></i>
                     <h3 style="font-size: 16px; color: var(--text-main); margin-bottom: 4px;">Cryptographic Ledger Verified</h3>
                     <p style="font-size: 11px; color: var(--text-muted);">All agentic outreach records and dunning attempts are cryptographically signed with SHA-256 hash chaining.</p>
@@ -790,31 +790,31 @@ awaiting instructions...</div>
             <div class="modal-body" style="display: flex; flex-direction: column; gap: 10px; padding-top: 12px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
                     <span style="font-size: 12px; color: var(--text-main);">Run Step-by-Step Simulation</span>
-                    <kbd style="background:#090d16; border:1px solid var(--border-card); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">Space</kbd>
+                    <kbd>Space</kbd>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
                     <span style="font-size: 12px; color: var(--text-main);">Open Full Batch Simulator (50+)</span>
-                    <kbd style="background:#090d16; border:1px solid var(--border-card); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">B</kbd>
+                    <kbd>B</kbd>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
                     <span style="font-size: 12px; color: var(--text-main);">Open AI Strategy / ROI Calculator</span>
-                    <kbd style="background:#090d16; border:1px solid var(--border-card); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">C</kbd>
+                    <kbd>C</kbd>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
                     <span style="font-size: 12px; color: var(--text-main);">Focus Global AI Copilot Search</span>
-                    <kbd style="background:#090d16; border:1px solid var(--border-card); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">/</kbd>
+                    <kbd>/</kbd>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
                     <span style="font-size: 12px; color: var(--text-main);">Export Audit Ledger CSV</span>
-                    <kbd style="background:#090d16; border:1px solid var(--border-card); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">E</kbd>
+                    <kbd>E</kbd>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
                     <span style="font-size: 12px; color: var(--text-main);">Reset & Seed Database</span>
-                    <kbd style="background:#090d16; border:1px solid var(--border-card); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">R</kbd>
+                    <kbd>R</kbd>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
                     <span style="font-size: 12px; color: var(--text-main);">Secret Admin Control Console</span>
-                    <kbd style="background:#090d16; border:1px solid var(--border-card); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--accent-glow);">M</kbd>
+                    <kbd>M</kbd>
                 </div>
             </div>
             <div class="modal-footer" style="padding-top: 12px;">
@@ -831,6 +831,6 @@ awaiting instructions...</div>
     <!-- Accessible Notification Toast -->
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="app/static/app.js?v=6"></script>
+    <script src="app/static/app.js?v=7"></script>
 </body>
 </html>
