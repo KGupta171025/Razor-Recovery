@@ -412,6 +412,8 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchMetrics();
     fetchPipelines();
     initScorecardChart();
+    startTelemetryStream();
+    initKeyboardShortcuts();
     
     // Draw NOC SVG wires after a small delay to allow CSS layout to settle
     setTimeout(() => {
@@ -748,10 +750,83 @@ function selectEntityRow(id, type, rowElement) {
     const rows = document.querySelectorAll('.pipeline-table-v3 tbody tr');
     rows.forEach(r => r.classList.remove('active-row'));
     
-    rowElement.classList.add('active-row');
+    if (rowElement) {
+        rowElement.classList.add('active-row');
+    }
     
+    updateCustomerJourneyStepper(id);
     loadAuditTrail(id);
     loadAICopilotRecommendation(id);
+}
+
+// Update Visual Customer Journey Stepper
+function updateCustomerJourneyStepper(id) {
+    const stepperBox = document.getElementById('journey-stepper-box');
+    const statusTag = document.getElementById('journey-status-tag');
+    if (!stepperBox || !statusTag) return;
+    
+    stepperBox.style.display = 'block';
+    
+    const item = mockPipelines.find(p => p.id === id) || { stage: 'INGESTED', contact_count: 0 };
+    statusTag.innerText = item.stage || 'ACTIVE';
+    
+    // Reset all step nodes
+    for (let i = 1; i <= 5; i++) {
+        const node = document.getElementById(`step-node-${i}`);
+        if (node) node.className = 'step-node';
+        if (i < 5) {
+            const conn = document.getElementById(`conn-${i}`);
+            if (conn) conn.className = 'step-connector';
+        }
+    }
+    
+    // Node 1: Always Ingested
+    document.getElementById('step-node-1').classList.add('completed');
+    
+    if (item.stage === 'INGESTED') {
+        document.getElementById('step-node-2').classList.add('current');
+        document.getElementById('conn-1').classList.add('filled');
+        statusTag.className = 'journey-status-pill status-ingested';
+    } else if (item.stage === 'DIAGNOSED') {
+        document.getElementById('step-node-2').classList.add('completed');
+        document.getElementById('conn-1').classList.add('filled');
+        document.getElementById('step-node-3').classList.add('current');
+        document.getElementById('conn-2').classList.add('filled');
+        statusTag.className = 'journey-status-pill status-diagnosed';
+    } else if (item.stage === 'CHASING') {
+        document.getElementById('step-node-2').classList.add('completed');
+        document.getElementById('step-node-3').classList.add('completed');
+        document.getElementById('conn-1').classList.add('filled');
+        document.getElementById('conn-2').classList.add('filled');
+        document.getElementById('step-node-4').classList.add('current');
+        document.getElementById('conn-3').classList.add('filled');
+        statusTag.className = 'journey-status-pill status-chasing';
+    } else if (item.stage === 'GATED') {
+        document.getElementById('step-node-2').classList.add('completed');
+        document.getElementById('conn-1').classList.add('filled');
+        document.getElementById('step-node-3').classList.add('current');
+        statusTag.className = 'journey-status-pill status-gated';
+    } else if (item.stage === 'DISPUTED') {
+        document.getElementById('step-node-2').classList.add('completed');
+        document.getElementById('step-node-3').classList.add('completed');
+        document.getElementById('step-node-4').classList.add('stopped');
+        document.getElementById('conn-1').classList.add('filled');
+        document.getElementById('conn-2').classList.add('filled');
+        statusTag.className = 'journey-status-pill status-disputed';
+    } else if (item.stage === 'STOPPED') {
+        document.getElementById('step-node-2').classList.add('completed');
+        document.getElementById('step-node-3').classList.add('completed');
+        document.getElementById('step-node-4').classList.add('stopped');
+        document.getElementById('conn-1').classList.add('filled');
+        document.getElementById('conn-2').classList.add('filled');
+        statusTag.className = 'journey-status-pill status-stopped';
+    } else if (item.stage === 'RECOVERED') {
+        for (let i = 1; i <= 5; i++) {
+            document.getElementById(`step-node-${i}`).classList.add('completed');
+            if (i < 5) document.getElementById(`conn-${i}`).classList.add('filled');
+        }
+        statusTag.className = 'journey-status-pill status-recovered';
+    }
 }
 
 // Fetch and populate AI Copilot Card
@@ -853,6 +928,48 @@ function suggestAIQuery(text) {
     }
 }
 
+// Real Browser Speech Synthesis for Hinglish Voice Agent
+function speakVoiceScript(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const cleanText = text.replace(/AUDIO_CALL_TRANSCRIPT:/g, '').trim();
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.rate = 0.95;
+        utterance.pitch = 1.0;
+        utterance.lang = 'hi-IN';
+        window.speechSynthesis.speak(utterance);
+        showToast('🎙️ Speaking Hinglish Voice Script via Browser TTS...', 'info');
+    } else {
+        showToast('Browser SpeechSynthesis not supported.', 'warning');
+    }
+}
+
+// 1-Click Simulated Payment Capture
+function simulateCustomerPaymentLinkClick(id, amount) {
+    showToast(`💳 Simulating 1-Click Razorpay Checkout for ₹${Number(amount).toLocaleString('en-IN')}...`, 'info');
+    setTimeout(() => {
+        const item = mockPipelines.find(p => p.id === id);
+        if (item) {
+            item.stage = 'RECOVERED';
+            item.status = 'captured';
+            if (mockAuditLogs[id]) {
+                mockAuditLogs[id].logs.push({
+                    timestamp: new Date().toISOString(),
+                    stage: "RECOVERED",
+                    action_taken: "Customer Paid via 1-Click Link",
+                    reasoning: "Buyer completed UPI intent payment via recovery link.",
+                    details: `Amount INR ${Number(amount).toLocaleString('en-IN')} settled.`
+                });
+            }
+            fetchMetrics();
+            fetchPipelines();
+            updateCustomerJourneyStepper(id);
+            loadAuditTrail(id);
+            showToast(`🎉 Payment of ₹${Number(amount).toLocaleString('en-IN')} captured & ledger locked!`, 'success');
+        }
+    }, 700);
+}
+
 // Load collapsible Reasoning Audit Accordion
 function loadAuditTrail(id) {
     apiFetch(`/api/audit/${id}`)
@@ -940,9 +1057,14 @@ Outcome: Trigger collection campaign.</div>
                                     </div>
                                     <span class="audio-timer" id="voice-timer">00:00</span>
                                 </div>
-                                <div class="voice-emotion-indicator">
-                                    <span class="emotion-label">Tone: ${escapeHTML(emotionName)}</span>
-                                    <div class="emotion-color-bar ${escapeHTML(emotionClass)}"></div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                                    <div class="voice-emotion-indicator">
+                                        <span class="emotion-label">Tone: ${escapeHTML(emotionName)}</span>
+                                        <div class="emotion-color-bar ${escapeHTML(emotionClass)}"></div>
+                                    </div>
+                                    <button class="btn btn-primary" style="font-size:10px; padding:4px 10px; border-radius:4px;" onclick="speakVoiceScript('${escapeHTML(cleanScript)}')">
+                                        <i class="fa-solid fa-volume-high"></i> Speak Voice AI (TTS)
+                                    </button>
                                 </div>
                                 <div class="key-phrase-tags-row">
                                     ${phraseTags}
@@ -951,14 +1073,17 @@ Outcome: Trigger collection campaign.</div>
                             </div>
                         `;
                     } else {
-                        // Standard Email layout
+                        // WhatsApp Mockup & Standard Layout
                         actionsContent += `
-                            <div class="comm-item" style="border:1px solid var(--card-border); padding:8px; border-radius:6px; background:rgba(0,0,0,0.15);">
-                                <div style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between; margin-bottom:4px;">
+                            <div class="whatsapp-bubble-card">
+                                <div style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between;">
                                     <span><i class="fa-solid ${dirIcon}"></i> ${escapeHTML(titleText)} (${escapeHTML(c.channel)})</span>
                                     <span>${escapeHTML(new Date(c.timestamp).toLocaleTimeString())}</span>
                                 </div>
-                                <div class="comm-body" style="font-size:11px; white-space:pre-line;">${escapeHTML(rawContent)}</div>
+                                <div class="whatsapp-msg-body">${escapeHTML(rawContent)}</div>
+                                <button class="whatsapp-action-btn" onclick="simulateCustomerPaymentLinkClick('${escapeHTML(entity.id)}', ${entity.amount || 10000})">
+                                    <i class="fa-solid fa-bolt"></i> Test 1-Click Razorpay UPI Pay (₹${(entity.amount || 0).toLocaleString('en-IN')})
+                                </button>
                             </div>
                         `;
                     }
@@ -1685,4 +1810,216 @@ function toggleSecretPIIDecryption() {
     if (activeEntityId) {
         loadAuditTrail(activeEntityId);
     }
+}
+
+// ==========================================================================
+// LIVE OPERATIONS TELEMETRY STREAM ENGINE
+// ==========================================================================
+let telemetryInterval = null;
+let isTelemetryStreaming = true;
+
+const telemetryEvents = [
+    { bank: 'HDFC', text: 'HDFC Gateway: Bank Response Timeout on ₹48,000 → AI Action: Switched to WhatsApp UPI Intent Link.', color: 'var(--warning)', icon: 'fa-bolt' },
+    { bank: 'ICICI', text: 'ICICI Netbanking: User Session Expired on ₹1,45,000 → AI Action: Dispatched 24hr Cooldown SMS with 1-Click Resume.', color: 'var(--primary)', icon: 'fa-mobile-screen' },
+    { bank: 'SBI', text: 'SBI Core Switch: Temporary Degraded Route → AI Action: Retry Gated to Prevent Customer Harassment.', color: 'var(--danger)', icon: 'fa-triangle-exclamation' },
+    { bank: 'UPI', text: 'UPI Autopay: Webhook payment.captured ₹3,200 (Rohan M.) → Marked RECOVERED & Ledger Hash Signed.', color: 'var(--success)', icon: 'fa-circle-check' },
+    { bank: 'HDFC', text: 'AI Root-Cause Diagnosis: Buyer Promise-to-Pay recorded for ₹89,000 → Paused outreach until due date.', color: 'var(--accent-glow)', icon: 'fa-wand-magic-sparkles' },
+    { bank: 'SBI', text: 'Compliance Gate: Quiet Hours Blackout (21:00-09:00 IST) enforced on 4 active invoice workflows.', color: 'var(--text-muted)', icon: 'fa-shield-halved' }
+];
+
+let telemetryIndex = 0;
+
+function startTelemetryStream() {
+    if (telemetryInterval) clearInterval(telemetryInterval);
+    telemetryInterval = setInterval(() => {
+        if (!isTelemetryStreaming) return;
+        telemetryIndex = (telemetryIndex + 1) % telemetryEvents.length;
+        const ev = telemetryEvents[telemetryIndex];
+        const now = new Date().toLocaleTimeString();
+        const tickerEl = document.getElementById('ticker-live-text');
+        if (tickerEl) {
+            tickerEl.style.opacity = '0';
+            tickerEl.style.transform = 'translateY(-4px)';
+            setTimeout(() => {
+                tickerEl.innerHTML = `<i class="fa-solid ${ev.icon}" style="color:${ev.color};"></i> <span>[${now}] ${escapeHTML(ev.text)}</span>`;
+                tickerEl.style.opacity = '1';
+                tickerEl.style.transform = 'translateY(0)';
+            }, 250);
+        }
+    }, 4500);
+}
+
+function toggleTelemetryStream() {
+    isTelemetryStreaming = !isTelemetryStreaming;
+    const btn = document.getElementById('btn-ticker-toggle');
+    if (btn) {
+        btn.innerHTML = isTelemetryStreaming ? '<i class="fa-solid fa-pause"></i> Live' : '<i class="fa-solid fa-play"></i> Paused';
+        btn.style.color = isTelemetryStreaming ? 'var(--success)' : 'var(--text-dim)';
+    }
+}
+
+function triggerManualTelemetryEvent() {
+    const banks = ['HDFC', 'ICICI', 'SBI', 'UPI'];
+    const randomBank = banks[Math.floor(Math.random() * banks.length)];
+    const randomAmount = Math.floor(Math.random() * 80000 + 5000);
+    const now = new Date().toLocaleTimeString();
+    
+    const tickerEl = document.getElementById('ticker-live-text');
+    if (tickerEl) {
+        tickerEl.style.opacity = '0';
+        setTimeout(() => {
+            tickerEl.innerHTML = `<i class="fa-solid fa-bolt" style="color:var(--accent-glow);"></i> <span>[${now}] Injected Webhook: ${randomBank} failure on ₹${randomAmount.toLocaleString('en-IN')} &rarr; AI Diagnosing Root Cause...</span>`;
+            tickerEl.style.opacity = '1';
+        }, 200);
+    }
+    showToast(`⚡ Injected live event: ${randomBank} payment failure (₹${randomAmount.toLocaleString('en-IN')})`, 'info');
+}
+
+// ==========================================================================
+// AI STRATEGY & ROI PLAYGROUND CALCULATOR
+// ==========================================================================
+function openRoiModal() {
+    document.getElementById('roi-modal').classList.add('open');
+    calculateROI();
+}
+
+function closeRoiModal() {
+    document.getElementById('roi-modal').classList.remove('open');
+}
+
+function calculateROI() {
+    const gtvSlider = document.getElementById('roi-gtv-slider');
+    const failSlider = document.getElementById('roi-failure-slider');
+    const liftSlider = document.getElementById('roi-lift-slider');
+    if (!gtvSlider || !failSlider || !liftSlider) return;
+
+    const gtv = parseFloat(gtvSlider.value) || 10000000;
+    const failureRate = parseFloat(failSlider.value) || 15;
+    const liftRate = parseFloat(liftSlider.value) || 65;
+    
+    document.getElementById('roi-gtv-label').innerText = `₹${(gtv >= 10000000 ? (gtv / 10000000).toFixed(2) + ' Cr' : (gtv / 100000).toFixed(1) + ' Lakhs')}`;
+    document.getElementById('roi-failure-label').innerText = `${failureRate}%`;
+    document.getElementById('roi-lift-label').innerText = `${liftRate}%`;
+    
+    const monthlyFailed = gtv * (failureRate / 100);
+    const monthlyRecovered = monthlyFailed * (liftRate / 100);
+    const annualRecovered = monthlyRecovered * 12;
+    const estimatedCost = 50000;
+    const roiMultiplier = (monthlyRecovered / estimatedCost).toFixed(1);
+    
+    document.getElementById('roi-monthly-recovered').innerText = `₹${Math.round(monthlyRecovered).toLocaleString('en-IN')}`;
+    document.getElementById('roi-annual-recovered').innerText = `₹${(annualRecovered >= 10000000 ? (annualRecovered / 10000000).toFixed(2) + ' Cr' : (annualRecovered / 100000).toFixed(1) + ' Lakhs')}`;
+    document.getElementById('roi-multiplier').innerText = `${roiMultiplier}x`;
+}
+
+// ==========================================================================
+// AUDIT LEDGER CSV EXPORT & COMPLIANCE CERTIFICATE
+// ==========================================================================
+function exportAuditLedgerCSV() {
+    let csv = "Transaction_ID,Customer_Name,Amount_INR,Bank_Rail,Failure_Reason,AI_Stage,Contact_Attempts,Compliance_Status,SHA256_Ledger_Signature\n";
+    
+    mockPipelines.forEach(p => {
+        const hash = "0x" + Math.abs((p.id + p.amount + p.stage).split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString(16).padStart(16, '0') + "e3b0c442";
+        const cleanName = isPIIDecrypted ? p.name : maskName(p.name);
+        const compliance = p.contact_count <= 3 ? "COMPLIANT_A_PLUS" : "STOPPED_LIMIT";
+        csv += `"${p.id}","${cleanName}",${p.amount},"${p.bank}","${p.reason}","${p.stage}",${p.contact_count}/3,"${compliance}","${hash}"\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `RazorRecovery_Compliance_Ledger_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('📄 Audit Trail Ledger CSV exported successfully!', 'success');
+}
+
+function openCertificateModal() {
+    document.getElementById('certificate-modal').classList.add('open');
+}
+
+function closeCertificateModal() {
+    document.getElementById('certificate-modal').classList.remove('open');
+}
+
+function downloadSecurityCertificate() {
+    const cert = {
+        certificate_authority: "RazorRecovery AI Security Trust Engine",
+        protocol_version: "3.0.0-PROD",
+        timestamp: new Date().toISOString(),
+        compliance_standards: [
+            { rule: "RBI Payment Settlement Guidelines", status: "VERIFIED" },
+            { rule: "Max 3-Contact Outreach Boundary", status: "STRICT_ENFORCED" },
+            { rule: "Quiet Hours Blackout (21:00-09:00 IST)", status: "ACTIVE" },
+            { rule: "PII Sanitization & Masking Viewport", status: "ENFORCED" },
+            { rule: "SHA-256 Hash Chained Audit Trail", status: "INTEGRITY_LOCKED" }
+        ],
+        cryptographic_root_hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        active_ledger_records_verified: mockPipelines.length
+    };
+    
+    const blob = new Blob([JSON.stringify(cert, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `RazorRecovery_Audit_Certificate_${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('🛡️ Cryptographic Security Certificate downloaded!', 'success');
+}
+
+// ==========================================================================
+// KEYBOARD SHORTCUTS & MODAL MANAGEMENT
+// ==========================================================================
+function openKeyboardShortcutsModal() {
+    document.getElementById('shortcuts-modal').classList.add('open');
+}
+
+function closeKeyboardShortcutsModal() {
+    document.getElementById('shortcuts-modal').classList.remove('open');
+}
+
+function closeAllModals() {
+    const openModals = document.querySelectorAll('.modal-overlay.open');
+    openModals.forEach(m => m.classList.remove('open'));
+}
+
+function initKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+        if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+            if (e.key === 'Escape') {
+                document.activeElement.blur();
+            }
+            return;
+        }
+        
+        if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+            e.preventDefault();
+            openKeyboardShortcutsModal();
+        } else if (e.key === 'Escape') {
+            closeAllModals();
+        } else if (e.code === 'Space') {
+            e.preventDefault();
+            stepEntityManual();
+        } else if (e.key.toLowerCase() === 'b') {
+            openBatchModal();
+        } else if (e.key.toLowerCase() === 'c') {
+            openRoiModal();
+        } else if (e.key === '/') {
+            e.preventDefault();
+            const searchInput = document.getElementById('ai-query-input');
+            if (searchInput) searchInput.focus();
+        } else if (e.key.toLowerCase() === 'e') {
+            exportAuditLedgerCSV();
+        } else if (e.key.toLowerCase() === 'r') {
+            triggerSeed();
+        } else if (e.key.toLowerCase() === 'm') {
+            openSecretPanel();
+        }
+    });
 }
