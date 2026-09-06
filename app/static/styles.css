@@ -228,20 +228,29 @@ kbd {
     top: 12px;
 }
 
-/* Native-feel Subtle Scrollbars */
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+/* Universal Hidden Scrollbar System (Chrome, Safari, Firefox, Edge, iOS, Android) */
+html, body, *, *::before, *::after {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
 }
-::-webkit-scrollbar-track {
-    background: transparent;
+
+::-webkit-scrollbar,
+*::-webkit-scrollbar {
+    display: none !important;
+    width: 0px !important;
+    height: 0px !important;
+    background: transparent !important;
+    -webkit-appearance: none !important;
 }
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
-    border-radius: var(--radius-full);
-}
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.24);
+
+::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track,
+::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-corner,
+*::-webkit-scrollbar-corner {
+    display: none !important;
+    background: transparent !important;
 }
 
 /* Typography Elements with Tight Tracking (Vercel Style) */
@@ -1152,10 +1161,19 @@ input:checked + .switch-slider:before {
 .pipelines-table-container {
     width: 100%;
     overflow-x: auto;
-    max-height: 380px;
+    overflow-y: auto;
+    max-height: 420px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-subtle);
     background: rgba(6, 9, 15, 0.4);
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+.pipelines-table-container::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
 .pipeline-table-v3 {
@@ -1173,7 +1191,7 @@ input:checked + .switch-slider:before {
 }
 
 .pipeline-table-v3 th {
-    padding: 9px 10px;
+    padding: 10px 14px;
     color: var(--text-muted);
     font-weight: 700;
     font-size: var(--text-3xs);
@@ -1184,7 +1202,7 @@ input:checked + .switch-slider:before {
 }
 
 .pipeline-table-v3 td {
-    padding: 8px 10px;
+    padding: 9px 14px;
     border-bottom: 1px solid var(--border-subtle);
     color: var(--text-body);
     vertical-align: middle;
