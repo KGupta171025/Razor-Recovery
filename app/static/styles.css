@@ -228,19 +228,29 @@ kbd {
     top: 12px;
 }
 
-/* Universal Hidden Scrollbar System (Chrome, Safari, Firefox, Edge, iOS, Android) */
+/* ==========================================================================
+   GLOBAL HIDDEN SCROLLBAR SYSTEM (Zero-Width Invisible Scrollbars)
+   Preserves full trackpad, mousewheel, touch & keyboard scrolling across
+   Chrome, Safari, Edge, Firefox, and Opera with zero visual clutter.
+   ========================================================================== */
+
+/* Universal Scrollbar Hiding for Modern Browsers */
 html, body, *, *::before, *::after {
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE and Edge */
 }
 
-::-webkit-scrollbar,
-*::-webkit-scrollbar {
+/* Chrome, Safari, Edge & Opera Webkit Engine */
+*::-webkit-scrollbar,
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+::-webkit-scrollbar {
     display: none !important;
-    width: 0px !important;
-    height: 0px !important;
+    width: 0 !important;
+    height: 0 !important;
+    max-width: 0 !important;
+    max-height: 0 !important;
     background: transparent !important;
-    -webkit-appearance: none !important;
 }
 
 ::-webkit-scrollbar-track,
@@ -251,6 +261,17 @@ html, body, *, *::before, *::after {
 *::-webkit-scrollbar-corner {
     display: none !important;
     background: transparent !important;
+}
+
+/* Ensure smooth touch/trackpad scrolling behavior across all scrollable containers */
+html, body, .dashboard-container, .main-content, .sidebar, 
+.pipelines-table-container, .table-container, .table-responsive,
+.modal-overlay, .modal-card, .drawer-content,
+.reasoning-body, .compliance-content, .roi-panel, .terminal-log-pane,
+pre, code, textarea {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Typography Elements with Tight Tracking (Vercel Style) */
@@ -1162,12 +1183,13 @@ input:checked + .switch-slider:before {
     width: 100%;
     overflow-x: auto;
     overflow-y: auto;
-    max-height: 420px;
+    max-height: 380px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-subtle);
     background: rgba(6, 9, 15, 0.4);
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
+    -webkit-overflow-scrolling: touch;
 }
 
 .pipelines-table-container::-webkit-scrollbar {
@@ -1191,7 +1213,7 @@ input:checked + .switch-slider:before {
 }
 
 .pipeline-table-v3 th {
-    padding: 10px 14px;
+    padding: 9px 10px;
     color: var(--text-muted);
     font-weight: 700;
     font-size: var(--text-3xs);
@@ -1202,7 +1224,7 @@ input:checked + .switch-slider:before {
 }
 
 .pipeline-table-v3 td {
-    padding: 9px 14px;
+    padding: 8px 10px;
     border-bottom: 1px solid var(--border-subtle);
     color: var(--text-body);
     vertical-align: middle;
