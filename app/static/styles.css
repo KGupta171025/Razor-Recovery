@@ -932,6 +932,8 @@ button {
     gap: var(--space-3);
     align-items: start;
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .grid-col {
@@ -946,6 +948,14 @@ button {
     flex-direction: column;
     gap: var(--space-3);
     position: relative;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.col-pipelines, .col-noc, .col-audit {
+    min-width: 0;
+    max-width: 100%;
 }
 
 .grid-col::before {
@@ -1179,8 +1189,14 @@ input:checked + .switch-slider:before {
     box-shadow: 0 1px 6px rgba(0, 210, 255, 0.3);
 }
 
+.mobile-table-hint {
+    display: none;
+}
+
 .pipelines-table-container {
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     overflow-x: auto;
     overflow-y: auto;
     max-height: 380px;
@@ -1190,6 +1206,7 @@ input:checked + .switch-slider:before {
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
     -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
 }
 
 .pipelines-table-container::-webkit-scrollbar {
@@ -2410,73 +2427,290 @@ input:checked + .switch-slider:before {
         gap: 3px;
     }
 
-    /* ── 9. Workspace Grid — Single Column ── */
+    /* ── 9. Workspace Grid — Single Column Strictly Constrained ── */
     .workspace-grid-three {
-        grid-template-columns: 1fr;
-        gap: 10px;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
     }
 
-    .col-pipelines { order: 1; }
-    .col-noc { order: 2; }
-    .col-audit { order: 3; }
+    .col-pipelines {
+        order: 1 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+    .col-noc {
+        order: 2 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+    .col-audit {
+        order: 3 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
 
     .grid-col {
-        padding: 12px;
+        padding: 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
     }
 
-    /* ── 10. NOC Map — adapt fixed height ── */
+    /* ── 10. NOC Map — Fits 100% within mobile viewport ── */
     .noc-network-map {
-        height: 200px;
+        height: 220px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: stretch !important;
+        position: relative !important;
+        overflow: hidden !important;
+        margin: 6px 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .noc-nodes-column {
+        flex-shrink: 0 !important;
+        z-index: 2 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-around !important;
+        width: auto !important;
+    }
+
+    .node-bank {
+        padding: 6px 9px !important;
+        font-size: 11px !important;
+        gap: 5px !important;
+        border-radius: var(--radius-xs) !important;
+    }
+
+    .noc-status-column {
+        flex-shrink: 0 !important;
+        z-index: 2 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-around !important;
+        align-items: flex-end !important;
+        width: auto !important;
+    }
+
+    .health-target {
+        padding: 3px 6px !important;
+        font-size: 9.5px !important;
+        gap: 4px !important;
+        white-space: nowrap !important;
+    }
+
+    .noc-svg-wires {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        pointer-events: none !important;
+        z-index: 1 !important;
+    }
+
+    .noc-footer-simulation {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        font-size: 11px !important;
+        padding-top: 8px !important;
     }
 
     /* ── 11. Pipeline Table ── */
+    .pipeline-card-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+
+    .pipeline-card-header .tabs {
+        width: 100% !important;
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+    }
+
+    .pipeline-card-header .tab-btn {
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+    }
+
+    .mobile-table-hint {
+        display: flex !important;
+        align-items: center;
+        gap: 6px;
+        font-size: 10px;
+        color: var(--accent-glow);
+        background: rgba(0, 210, 255, 0.08);
+        border: 1px solid rgba(0, 210, 255, 0.2);
+        border-radius: var(--radius-xs);
+        padding: 5px 8px;
+        margin-bottom: 6px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
     .pipelines-table-container {
-        max-height: 320px;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        max-height: 340px !important;
+        overflow-x: auto !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-subtle);
+        background: rgba(6, 9, 15, 0.5);
+        box-sizing: border-box !important;
+    }
+
+    .pipeline-table-v3 {
+        min-width: 540px !important;
+        width: 100% !important;
     }
 
     .pipeline-table-v3 th,
     .pipeline-table-v3 td {
-        padding: 7px 8px;
-        font-size: 10.5px;
+        padding: 7px 6px !important;
+        font-size: 10.5px !important;
     }
 
-    .pipeline-card-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+    .pipeline-table-v3 th {
+        font-size: 9px !important;
+        letter-spacing: 0.3px !important;
+    }
+
+    .pipeline-table-v3 td:nth-child(1) {
+        min-width: 110px;
+        white-space: normal !important;
+    }
+    .pipeline-table-v3 td:nth-child(2) {
+        min-width: 65px;
+        white-space: nowrap !important;
+        font-weight: 700;
+        font-family: var(--font-mono);
+    }
+    .pipeline-table-v3 td:nth-child(3) {
+        min-width: 130px;
+        max-width: 170px;
+        white-space: normal !important;
+        line-height: 1.25;
+    }
+    .pipeline-table-v3 td:nth-child(4) {
+        min-width: 45px;
+        text-align: center !important;
+        white-space: nowrap !important;
+    }
+    .pipeline-table-v3 td:nth-child(5) {
+        min-width: 80px;
+        text-align: center !important;
+        white-space: nowrap !important;
+    }
+    .pipeline-table-v3 td:nth-child(6) {
+        min-width: 45px;
+        text-align: center !important;
+        white-space: nowrap !important;
     }
 
     /* ── 12. Simulation Control Buttons ── */
+    .simulation-control-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
     .simulation-btn-group {
-        flex-direction: column;
-        gap: 6px;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        width: 100% !important;
     }
 
     .btn-step-sim,
     .btn-full-sim {
-        width: 100%;
-        justify-content: center;
-        font-size: 12px;
-        padding: 9px 12px;
+        width: 100% !important;
+        justify-content: center !important;
+        font-size: 11.5px !important;
+        padding: 9px 8px !important;
+        text-align: center !important;
+        white-space: nowrap !important;
     }
 
     .override-selector-pane {
-        gap: 4px;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+        width: 100% !important;
+        margin-top: 6px !important;
+    }
+
+    .override-selector-pane label {
+        font-size: 11px !important;
+        color: var(--text-muted);
     }
 
     .override-selector-pane select {
-        font-size: 12px;
-        padding: 7px 10px;
+        font-size: 13px !important;
+        padding: 8px 10px !important;
+        width: 100% !important;
+        background: var(--bg-input) !important;
+        color: var(--text-main) !important;
+        border: 1px solid var(--border-card) !important;
+        border-radius: var(--radius-sm) !important;
+        box-sizing: border-box !important;
     }
 
     /* ── 13. Scorecard ── */
-    .scorecard-metrics-grid {
-        grid-template-columns: 1fr;
-        gap: 8px;
+    .scorecard-bottom-panel {
+        padding-top: 10px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
     }
 
-    .scorecard-bottom-panel {
-        padding-top: 10px;
+    .scorecard-metrics-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .scorecard-charts {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        height: 75px !important;
+        position: relative !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    #scorecardLineChart {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 75px !important;
+        display: block !important;
     }
 
     /* ── 14. Modals — full-mobile sizing ── */
