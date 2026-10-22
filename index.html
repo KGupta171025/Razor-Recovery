@@ -33,7 +33,7 @@
     <!-- Chart.js for Recovery Visualizations -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <link rel="stylesheet" href="app/static/styles.css?v=8">
+    <link rel="stylesheet" href="app/static/styles.css?v=9">
     <link rel="icon" type="image/png" href="https://razorpay.com/favicon.png">
 </head>
 <body>
@@ -43,8 +43,71 @@
     <!-- Interactive Particle Backdrop Canvas -->
     <canvas id="bg-canvas" aria-hidden="true"></canvas>
     
+    <!-- Mobile Top-Bar (visible only on ≤ 768px) -->
+    <header class="mobile-topbar" id="mobile-topbar" role="banner">
+        <div class="mobile-topbar-brand">
+            <svg class="logo-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M14.26 10.098L3.389 17.166 1.564 24h9.008l3.688-13.902Z" fill="#2d3d54" />
+                <path d="M22.436 0l-11.91 7.773-1.174 4.276 6.625-4.297L11.65 24h4.391l6.395-24z" fill="#00d2ff" />
+            </svg>
+            <div>
+                <span class="mobile-brand-name">RazorRecovery</span>
+                <span class="mobile-brand-sub">AI v3</span>
+            </div>
+        </div>
+        <button class="mobile-hamburger" id="mobile-hamburger-btn" onclick="toggleMobileNav()" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-drawer">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+    </header>
+
+    <!-- Mobile Nav Drawer Backdrop -->
+    <div class="mobile-drawer-backdrop" id="mobile-drawer-backdrop" onclick="closeMobileNav()" aria-hidden="true"></div>
+
+    <!-- Mobile Nav Drawer -->
+    <nav class="mobile-drawer" id="mobile-drawer" aria-label="Mobile Navigation Drawer" aria-hidden="true">
+        <div class="mobile-drawer-header">
+            <div class="mobile-drawer-brand">
+                <svg class="logo-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M14.26 10.098L3.389 17.166 1.564 24h9.008l3.688-13.902Z" fill="#2d3d54" />
+                    <path d="M22.436 0l-11.91 7.773-1.174 4.276 6.625-4.297L11.65 24h4.391l6.395-24z" fill="#00d2ff" />
+                </svg>
+                <span class="mobile-brand-name">RazorRecovery</span>
+            </div>
+            <button class="mobile-drawer-close" onclick="closeMobileNav()" aria-label="Close navigation">&times;</button>
+        </div>
+        <div class="mobile-drawer-nav">
+            <a href="#" class="nav-item active" onclick="closeMobileNav()" aria-current="page"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Dashboard</a>
+            <a href="javascript:void(0)" class="nav-item" onclick="openRoiModal(); closeMobileNav()"><i class="fa-solid fa-calculator" aria-hidden="true"></i> AI Strategy Playground</a>
+            <a href="javascript:void(0)" class="nav-item" onclick="openBatchModal(); closeMobileNav()"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Run Batch Simulator</a>
+            <a href="javascript:void(0)" class="nav-item" onclick="exportAuditLedgerCSV(); closeMobileNav()"><i class="fa-solid fa-file-csv" aria-hidden="true"></i> Export Audit Ledger</a>
+            <a href="javascript:void(0)" class="nav-item" onclick="openCertificateModal(); closeMobileNav()"><i class="fa-solid fa-certificate" aria-hidden="true"></i> Compliance Certificate</a>
+            <a href="javascript:void(0)" class="nav-item" onclick="triggerSeed(); closeMobileNav()"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reset &amp; Seed Data</a>
+            <a href="https://github.com/KGupta171025/Razor-Recovery" target="_blank" rel="noopener noreferrer" class="nav-item" style="color: var(--accent-glow); margin-top: 8px;">
+                <i class="fa-brands fa-github" aria-hidden="true"></i> GitHub Repo <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px; margin-left: 4px;" aria-hidden="true"></i>
+            </a>
+        </div>
+        <div class="mobile-drawer-footer">
+            <div class="sidebar-security-badge">
+                <i class="fa-solid fa-shield-halved security-icon" aria-hidden="true"></i>
+                <div class="security-details">
+                    <span class="security-title">NOC Security Policy</span>
+                    <span class="security-grade">Compliance: <strong>A+ / Secure</strong></span>
+                </div>
+            </div>
+            <div class="system-status" role="status" aria-live="polite">
+                <div class="status-indicator online" aria-hidden="true"></div>
+                <div class="status-details">
+                    <span class="status-name">Agent Status: Active</span>
+                    <span class="status-mode">LLM Engine: Ready</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
     <div class="dashboard-container">
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar Navigation (desktop only) -->
         <aside class="sidebar" aria-label="Sidebar Navigation">
             <div class="logo-area" ondblclick="openSecretPanel()" role="button" tabindex="0" title="Double click or press M for Root Console" aria-label="RazorRecovery Logo - Double click for Root Console">
                 <svg class="logo-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -831,6 +894,6 @@ awaiting instructions...</div>
     <!-- Accessible Notification Toast -->
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="app/static/app.js?v=8"></script>
+    <script src="app/static/app.js?v=9"></script>
 </body>
 </html>

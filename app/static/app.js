@@ -2042,3 +2042,49 @@ function initKeyboardShortcuts() {
     });
 }
 
+/* ==========================================================================
+   MOBILE NAVIGATION DRAWER SYSTEM
+   ========================================================================== */
+function toggleMobileNav() {
+    const drawer = document.getElementById('mobile-drawer');
+    const backdrop = document.getElementById('mobile-drawer-backdrop');
+    const btn = document.getElementById('mobile-hamburger-btn');
+    if (!drawer) return;
+    const isOpen = drawer.classList.contains('open');
+    if (isOpen) {
+        closeMobileNav();
+    } else {
+        drawer.classList.add('open');
+        backdrop.classList.add('open');
+        btn.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+        drawer.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeMobileNav() {
+    const drawer = document.getElementById('mobile-drawer');
+    const backdrop = document.getElementById('mobile-drawer-backdrop');
+    const btn = document.getElementById('mobile-hamburger-btn');
+    if (!drawer) return;
+    drawer.classList.remove('open');
+    backdrop.classList.remove('open');
+    if (btn) {
+        btn.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+    }
+    drawer.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+}
+
+// Close drawer on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const drawer = document.getElementById('mobile-drawer');
+        if (drawer && drawer.classList.contains('open')) {
+            closeMobileNav();
+        }
+    }
+});
+
