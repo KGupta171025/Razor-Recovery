@@ -433,8 +433,17 @@ document.addEventListener('DOMContentLoaded', () => {
         drawNocWires();
     }, 3000);
 
-    // Redraw SVG wires on window resize for responsiveness
-    window.addEventListener('resize', drawNocWires);
+    // Redraw SVG wires and charts on window resize / orientation for responsiveness
+    window.addEventListener('resize', () => {
+        drawNocWires();
+        if (scorecardChart) scorecardChart.resize();
+    });
+    window.addEventListener('orientationchange', () => {
+        setTimeout(() => {
+            drawNocWires();
+            if (scorecardChart) scorecardChart.resize();
+        }, 200);
+    });
 
     // AI Command Input key listener
     const aiInput = document.getElementById('ai-query-input');
@@ -583,7 +592,7 @@ function drawNocWires() {
                 const targets = document.querySelectorAll('.health-target');
                 let targetNode = null;
                 targets.forEach(t => {
-                    if (t.innerText.trim() === targetText) {
+                    if (t.textContent.includes(targetText) || (t.innerText && t.innerText.includes(targetText))) {
                         targetNode = t;
                     }
                 });

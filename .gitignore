@@ -12,3 +12,5 @@ wheels/
 # Database files
 *.db
 razorrecovery.db
+config.bat
+node_modules
